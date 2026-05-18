@@ -1,9 +1,9 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,20 +17,42 @@ public class Assignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_service_id", nullable = false)
-    private OrderService orderService;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guide_id", nullable = false)
-    private Guide guide;
-    
+    @Column(name = "work_id", nullable = false)
+    private Long workId;
+
+    @Column(name = "guide_id", nullable = false)
+    private Long guideId;
+
     @Column(name = "status", nullable = false, length = 50)
-    private String status;
-    
-    @Column(name = "assigned_at")
-    private LocalDateTime assignedAt;
-    
-    @Column(name = "notes", length = 500)
-    private String notes;
+    private String status = "pending";
+
+    @Column(name = "accepted_at")
+    private LocalDateTime acceptedAt;
+
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @Column(name = "reminder_sent_at")
+    private LocalDateTime reminderSentAt;
+
+    @Column(name = "tour_started_at")
+    private LocalDateTime tourStartedAt;
+
+    @Column(name = "tour_ended_at")
+    private LocalDateTime tourEndedAt;
+
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

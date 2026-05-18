@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.Area;
 import com.example.demo.entity.Service;
+import com.example.demo.entity.ServiceType;
 import com.example.demo.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,16 @@ import java.util.Optional;
 public class ServiceController {
 
     private final CatalogService catalogService;
+
+    @GetMapping("/areas")
+    public ResponseEntity<List<Area>> getAllAreas() {
+        return ResponseEntity.ok(catalogService.findAllAreas());
+    }
+
+    @GetMapping("/service-types")
+    public ResponseEntity<List<ServiceType>> getAllServiceTypes() {
+        return ResponseEntity.ok(catalogService.findAllServiceTypes());
+    }
 
     @GetMapping
     public ResponseEntity<List<Service>> getAllServices() {

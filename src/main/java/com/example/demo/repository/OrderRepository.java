@@ -21,9 +21,21 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     
     List<Order> findByPicContactIdOrderByRequestedAtDesc(Long picContactId);
     
-    @Query("SELECT o FROM Order o WHERE o.deletedAt IS NULL ORDER BY o.createdAt DESC")
+    @Query("SELECT o FROM Order o " +
+           "LEFT JOIN FETCH o.reseller " +
+           "LEFT JOIN FETCH o.picContact " +
+           "LEFT JOIN FETCH o.originalAgent " +
+           "LEFT JOIN FETCH o.status " +
+           "LEFT JOIN FETCH o.createdByUser " +
+           "WHERE o.deletedAt IS NULL ORDER BY o.createdAt DESC")
     List<Order> findAllActive();
     
-    @Query("SELECT o FROM Order o WHERE o.deletedAt IS NULL AND o.status.id = :statusId ORDER BY o.createdAt DESC")
+    @Query("SELECT o FROM Order o " +
+           "LEFT JOIN FETCH o.reseller " +
+           "LEFT JOIN FETCH o.picContact " +
+           "LEFT JOIN FETCH o.originalAgent " +
+           "LEFT JOIN FETCH o.status " +
+           "LEFT JOIN FETCH o.createdByUser " +
+           "WHERE o.deletedAt IS NULL AND o.status.id = :statusId ORDER BY o.createdAt DESC")
     List<Order> findByStatusId(@Param("statusId") Long statusId);
 }

@@ -19,6 +19,15 @@ public interface OrderServiceRepository extends JpaRepository<OrderService, Long
     
     List<OrderService> findByOrderId(Long orderId);
     
+    @Query("SELECT os FROM OrderService os " +
+           "JOIN FETCH os.service s " +
+           "LEFT JOIN FETCH s.area " +
+           "LEFT JOIN FETCH s.serviceType " +
+           "LEFT JOIN FETCH os.area " +
+           "LEFT JOIN FETCH os.serviceType " +
+           "WHERE os.order.id IN :orderIds")
+    List<OrderService> findByOrderIdIn(@Param("orderIds") List<Long> orderIds);
+
     List<OrderService> findByServiceIdAndTargetDate(Long serviceId, LocalDate targetDate);
     
     @Query("SELECT os FROM OrderService os WHERE os.order.deletedAt IS NULL ORDER BY os.targetDate, os.startTime")

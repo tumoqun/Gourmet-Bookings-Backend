@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -44,6 +45,7 @@ public class OrderCreateRequest {
     
     private String currencyCode;
     private BigDecimal totalFeeAmount;
+    private LocalDateTime requestedAt;
     
     private List<OrderServiceRequest> orderServices;
     private List<OrderAdditionalServiceRequest> additionalServices;

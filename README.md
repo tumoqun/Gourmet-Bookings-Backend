@@ -1,25 +1,25 @@
 # Gourmet Bookings Backend API
 
-Spring Boot backend application for the Gourmet Bookings order management system with MySQL database.
+Spring Boot backend application for the Gourmet Bookings order management system with PostgreSQL database.
 
 ## Prerequisites
 
 - Java 17 or higher
 - Maven 3.6 or higher
-- MySQL 8.0 or higher
-- MySQL database named `gourmet_bookings`
+- PostgreSQL 15 or higher
+- PostgreSQL database named `gourmet_bookings`
 
 ## Database Setup
 
-1. Create MySQL database:
+1. Create PostgreSQL database:
    ```sql
-   CREATE DATABASE gourmet_bookings CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE gourmet_bookings;
    ```
 
 2. Update database connection in `src/main/resources/application.properties`:
    ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/gourmet_bookings?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-   spring.datasource.username=your_username
+   spring.datasource.url=jdbc:postgresql://localhost:5432/gourmet_bookings
+   spring.datasource.username=postgres
    spring.datasource.password=your_password
    ```
 

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "allotment_reservations")
@@ -21,15 +22,26 @@ public class AllotmentReservation {
     private Allotment allotment;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_service_id", nullable = false)
-    private OrderService orderService;
-    
-    @Column(name = "adult_count")
-    private Integer adultCount;
-    
-    @Column(name = "child_count")
-    private Integer childCount;
-    
-    @Column(name = "status", nullable = false, length = 50)
-    private String status;
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @Column(name = "guest_count", nullable = false)
+    private Integer guestCount;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

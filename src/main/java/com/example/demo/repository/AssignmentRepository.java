@@ -12,15 +12,17 @@ import java.util.List;
 @Repository
 public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     
-    List<Assignment> findByGuideIdOrderByAssignedAtDesc(@Param("guideId") Long guideId);
+    List<Assignment> findByGuideIdOrderByCreatedAtDesc(@Param("guideId") Long guideId);
     
-    List<Assignment> findByOrderServiceId(@Param("orderServiceId") Long orderServiceId);
+    List<Assignment> findByWorkId(@Param("workId") Long workId);
     
+    List<Assignment> findByWorkIdIn(List<Long> workIds);
+
     List<Assignment> findByStatus(@Param("status") String status);
     
-    @Query("SELECT a FROM Assignment a WHERE a.guide.id = :guideId AND a.assignedAt >= :startDate ORDER BY a.assignedAt DESC")
-    List<Assignment> findByGuideIdAndAssignedAtAfter(@Param("guideId") Long guideId, @Param("startDate") LocalDateTime startDate);
+    @Query("SELECT a FROM Assignment a WHERE a.guideId = :guideId AND a.createdAt >= :startDate ORDER BY a.createdAt DESC")
+    List<Assignment> findByGuideIdAndCreatedAtAfter(@Param("guideId") Long guideId, @Param("startDate") LocalDateTime startDate);
     
-    @Query("SELECT a FROM Assignment a WHERE a.orderService.order.deletedAt IS NULL ORDER BY a.assignedAt DESC")
+    @Query("SELECT a FROM Assignment a WHERE a.deletedAt IS NULL ORDER BY a.createdAt DESC")
     List<Assignment> findAllActive();
 }

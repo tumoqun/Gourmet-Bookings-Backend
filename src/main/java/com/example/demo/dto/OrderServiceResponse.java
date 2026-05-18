@@ -21,4 +21,9 @@ public class OrderServiceResponse {
     private String timeSlotCode;
     private Boolean isPrivate;
     private String timezone;
+
+    // Admin override fields (V3)
+    private Boolean isAdminModified;
+    private Long originalServiceId;
+    private String originalServiceNameSnapshot;
 }

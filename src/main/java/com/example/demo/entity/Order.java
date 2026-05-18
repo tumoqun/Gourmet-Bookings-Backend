@@ -32,12 +32,18 @@ public class Order {
     private Boolean isTentative = false;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_user_id")
+    @JoinColumn(name = "created_by_id")
     private User createdByUser;
     
     @Column(name = "created_by_name", length = 200)
     private String createdByName;
     
+    @Column(name = "order_group_id")
+    private Long orderGroupId;
+
+    @Column(name = "customer_group_id")
+    private Long customerGroupId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reseller_id")
     private Reseller reseller;
@@ -56,10 +62,10 @@ public class Order {
     @JoinColumn(name = "original_agent_id")
     private Agent originalAgent;
     
-    @Column(name = "ref_1", length = 100)
+    @Column(name = "ref1", length = 100)
     private String ref1;
     
-    @Column(name = "ref_2", length = 100)
+    @Column(name = "ref2", length = 100)
     private String ref2;
     
     @Column(name = "voucher_number", length = 100)

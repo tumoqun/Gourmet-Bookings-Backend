@@ -42,4 +42,5 @@ public class OrderResponse {
     private List<OrderAdditionalServiceResponse> additionalServices;
     private List<SpecialRequestTypeResponse> specialRequests;
     private List<OrderFinancialLineResponse> financialLines;
+    private String guide;
 }

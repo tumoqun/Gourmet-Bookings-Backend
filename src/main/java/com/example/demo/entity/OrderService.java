@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_services")
@@ -51,4 +52,17 @@ public class OrderService {
     
     @Column(name = "timezone", length = 50)
     private String timezone;
+
+    // Admin override fields (V3)
+    @Column(name = "is_admin_modified", nullable = false)
+    private Boolean isAdminModified = false;
+
+    @Column(name = "original_service_id")
+    private Long originalServiceId;
+
+    @Column(name = "original_service_name_snapshot", length = 200)
+    private String originalServiceNameSnapshot;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }
