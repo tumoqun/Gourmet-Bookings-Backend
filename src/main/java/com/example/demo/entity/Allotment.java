@@ -22,16 +22,16 @@ public class Allotment {
     @JoinColumn(name = "service_id", nullable = false)
     private Service service;
     
-    @Column(name = "service_date", nullable = false)
+    @Column(name = "date", nullable = false)
     private LocalDate serviceDate;
     
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime;
     
-    @Column(name = "capacity_total", nullable = false)
+    @Column(name = "capacity", nullable = false)
     private Integer capacityTotal;
     
-    @Column(name = "reserved_total", nullable = false)
+    @Column(name = "reserved_count", nullable = false)
     private Integer reservedTotal = 0;
     
     @Column(name = "status", nullable = false, length = 50)

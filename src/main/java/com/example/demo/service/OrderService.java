@@ -49,6 +49,9 @@ public class OrderService {
     private final com.example.demo.repository.WorkRepository workRepository;
     private final com.example.demo.repository.AssignmentRepository assignmentRepository;
     private final com.example.demo.repository.GuideRepository guideRepository;
+    private final com.example.demo.repository.ResellerRepository resellerRepository;
+    private final com.example.demo.repository.AgentRepository agentRepository;
+    private final com.example.demo.repository.ResellerContactRepository resellerContactRepository;
 
     public List<Order> findAllActive() {
         return orderRepository.findAllActive();
@@ -237,6 +240,16 @@ public class OrderService {
         order.setCurrencyCode(request.getCurrencyCode());
         order.setTotalFeeAmount(request.getTotalFeeAmount());
         order.setRequestedAt(request.getRequestedAt());
+
+        if (request.getResellerId() != null) {
+            order.setReseller(resellerRepository.findById(request.getResellerId()).orElse(null));
+        }
+        if (request.getPicContactId() != null) {
+            order.setPicContact(resellerContactRepository.findById(request.getPicContactId()).orElse(null));
+        }
+        if (request.getOriginalAgentId() != null) {
+            order.setOriginalAgent(agentRepository.findById(request.getOriginalAgentId()).orElse(null));
+        }
 
         if (order.getOrderNumber() == null || order.getOrderNumber().isEmpty()) {
             order.setOrderNumber(generateOrderNumber());
