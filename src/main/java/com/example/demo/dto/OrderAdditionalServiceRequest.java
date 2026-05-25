@@ -17,6 +17,7 @@ public class OrderAdditionalServiceRequest {
     
     private Boolean isEnabled = false;
     private String location;
+    private String handoffText;
     private Long serviceTypeId;
     private Long distanceBandId;
     private LocalTime suggestedTime;

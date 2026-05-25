@@ -30,6 +30,9 @@ public class OrderAdditionalService {
     
     @Column(name = "location", length = 200)
     private String location;
+
+    @Column(name = "handoff_text", length = 200)
+    private String handoffText;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_type_id")

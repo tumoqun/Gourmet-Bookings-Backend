@@ -2,9 +2,11 @@ package com.example.demo.service;
 
 import com.example.demo.entity.Service;
 import com.example.demo.entity.Area;
+import com.example.demo.entity.DistanceBand;
 import com.example.demo.entity.ServiceType;
 import com.example.demo.repository.ServiceRepository;
 import com.example.demo.repository.AreaRepository;
+import com.example.demo.repository.DistanceBandRepository;
 import com.example.demo.repository.ServiceTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ public class CatalogService {
     private final ServiceRepository serviceRepository;
     private final AreaRepository areaRepository;
     private final ServiceTypeRepository serviceTypeRepository;
+    private final DistanceBandRepository distanceBandRepository;
 
     public List<Service> findAllActiveServices() {
         return serviceRepository.findAllActive();
@@ -88,5 +91,9 @@ public class CatalogService {
 
     public Optional<ServiceType> findServiceTypeById(Long id) {
         return serviceTypeRepository.findById(id);
+    }
+
+    public List<DistanceBand> findAllDistanceBands() {
+        return distanceBandRepository.findAllOrdered();
     }
 }

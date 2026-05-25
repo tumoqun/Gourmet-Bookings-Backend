@@ -229,11 +229,15 @@ public class OrderController {
         response.setKind(oas.getKind());
         response.setIsEnabled(oas.getIsEnabled());
         response.setLocation(oas.getLocation());
+        response.setHandoffText(oas.getHandoffText());
         response.setSuggestedTime(oas.getSuggestedTime());
         response.setFeeAmount(oas.getFeeAmount());
         response.setCurrencyCode(oas.getCurrencyCode());
         if (oas.getServiceType() != null) {
             response.setServiceType(toServiceTypeResponse(oas.getServiceType()));
+        }
+        if (oas.getDistanceBand() != null) {
+            response.setDistanceBand(toDistanceBandResponse(oas.getDistanceBand()));
         }
         return response;
     }
@@ -254,5 +258,13 @@ public class OrderController {
 
     private ServiceTypeResponse toServiceTypeResponse(com.example.demo.entity.ServiceType serviceType) {
         return serviceType == null ? null : new ServiceTypeResponse(serviceType.getId(), serviceType.getCode(), serviceType.getName());
+    }
+
+    private DistanceBandResponse toDistanceBandResponse(com.example.demo.entity.DistanceBand distanceBand) {
+        return distanceBand == null ? null : new DistanceBandResponse(
+            distanceBand.getId(),
+            distanceBand.getLabel(),
+            distanceBand.getSortOrder()
+        );
     }
 }
