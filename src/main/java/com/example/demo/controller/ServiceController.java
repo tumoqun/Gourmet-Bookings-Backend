@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Area;
+import com.example.demo.entity.DistanceBand;
 import com.example.demo.entity.Service;
 import com.example.demo.entity.ServiceType;
 import com.example.demo.service.CatalogService;
@@ -28,6 +29,11 @@ public class ServiceController {
     @GetMapping("/service-types")
     public ResponseEntity<List<ServiceType>> getAllServiceTypes() {
         return ResponseEntity.ok(catalogService.findAllServiceTypes());
+    }
+
+    @GetMapping("/distance-bands")
+    public ResponseEntity<List<DistanceBand>> getAllDistanceBands() {
+        return ResponseEntity.ok(catalogService.findAllDistanceBands());
     }
 
     @GetMapping

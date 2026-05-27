@@ -1,25 +1,31 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.OrderCreateRequest;
+import com.example.demo.dto.OrderAdditionalServiceRequest;
 import com.example.demo.dto.OrderServiceRequest;
 import com.example.demo.entity.Order;
 import com.example.demo.entity.OrderAdditionalService;
 import com.example.demo.entity.OrderSpecialRequest;
+import com.example.demo.entity.OrderSpecialRequestId;
 import com.example.demo.entity.OrderStatus;
 import com.example.demo.entity.OrderFinancialLine;
 import com.example.demo.entity.OrderStatusHistory;
+import com.example.demo.entity.SpecialRequestType;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.OrderServiceRepository;
 import com.example.demo.repository.OrderFinancialLineRepository;
 import com.example.demo.repository.OrderStatusRepository;
 import com.example.demo.repository.ServiceRepository;
 import com.example.demo.repository.AreaRepository;
+import com.example.demo.repository.DistanceBandRepository;
 import com.example.demo.repository.ServiceTypeRepository;
+import com.example.demo.repository.SpecialRequestTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -44,8 +50,10 @@ public class OrderService {
     private final ServiceRepository serviceRepository;
     private final AreaRepository areaRepository;
     private final ServiceTypeRepository serviceTypeRepository;
+    private final DistanceBandRepository distanceBandRepository;
     private final com.example.demo.repository.OrderAdditionalServiceRepository additionalServiceRepository;
     private final com.example.demo.repository.OrderSpecialRequestRepository specialRequestRepository;
+    private final SpecialRequestTypeRepository specialRequestTypeRepository;
     private final com.example.demo.repository.WorkRepository workRepository;
     private final com.example.demo.repository.AssignmentRepository assignmentRepository;
     private final com.example.demo.repository.GuideRepository guideRepository;
@@ -171,11 +179,15 @@ public class OrderService {
                 r.setKind(oas.getKind());
                 r.setIsEnabled(oas.getIsEnabled());
                 r.setLocation(oas.getLocation());
+                r.setHandoffText(oas.getHandoffText());
                 r.setSuggestedTime(oas.getSuggestedTime());
                 r.setFeeAmount(oas.getFeeAmount());
                 r.setCurrencyCode(oas.getCurrencyCode());
                 if (oas.getServiceType() != null) {
                     r.setServiceType(toServiceTypeResponse(oas.getServiceType()));
+                }
+                if (oas.getDistanceBand() != null) {
+                    r.setDistanceBand(toDistanceBandResponse(oas.getDistanceBand()));
                 }
                 return r;
             }).collect(Collectors.toList()));
@@ -200,6 +212,14 @@ public class OrderService {
 
     private com.example.demo.dto.ServiceTypeResponse toServiceTypeResponse(com.example.demo.entity.ServiceType serviceType) {
         return serviceType == null ? null : new com.example.demo.dto.ServiceTypeResponse(serviceType.getId(), serviceType.getCode(), serviceType.getName());
+    }
+
+    private com.example.demo.dto.DistanceBandResponse toDistanceBandResponse(com.example.demo.entity.DistanceBand distanceBand) {
+        return distanceBand == null ? null : new com.example.demo.dto.DistanceBandResponse(
+            distanceBand.getId(),
+            distanceBand.getLabel(),
+            distanceBand.getSortOrder()
+        );
     }
 
     public Optional<Order> findById(Long id) {
@@ -264,6 +284,12 @@ public class OrderService {
         
         Order savedOrder = orderRepository.save(order);
         saveOrderServices(savedOrder, request.getOrderServices());
+        BigDecimal additionalFeeTotal = saveAdditionalServices(savedOrder, request.getAdditionalServices());
+        saveSpecialRequests(savedOrder, request.getSpecialRequestTypeIds());
+        if (additionalFeeTotal.compareTo(BigDecimal.ZERO) > 0) {
+            savedOrder.setTotalFeeAmount((savedOrder.getTotalFeeAmount() == null ? BigDecimal.ZERO : savedOrder.getTotalFeeAmount()).add(additionalFeeTotal));
+            savedOrder = orderRepository.save(savedOrder);
+        }
         log.info("Created order with ID: {}", savedOrder.getId());
         return savedOrder;
     }
@@ -290,6 +316,74 @@ public class OrderService {
             orderService.setTimezone(request.getTimezone());
             orderServiceRepository.save(orderService);
         }
+    }
+
+    private BigDecimal saveAdditionalServices(Order order, List<OrderAdditionalServiceRequest> serviceRequests) {
+        if (serviceRequests == null || serviceRequests.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal additionalFeeTotal = BigDecimal.ZERO;
+
+        for (OrderAdditionalServiceRequest request : serviceRequests) {
+            OrderAdditionalService additionalService = new OrderAdditionalService();
+            additionalService.setOrder(order);
+            additionalService.setKind(request.getKind());
+            additionalService.setIsEnabled(request.getIsEnabled() == null || Boolean.TRUE.equals(request.getIsEnabled()));
+            additionalService.setLocation(request.getLocation());
+            additionalService.setHandoffText(request.getHandoffText());
+            additionalService.setSuggestedTime(request.getSuggestedTime());
+            additionalService.setFeeAmount(BigDecimal.ZERO);
+            additionalService.setCurrencyCode(order.getCurrencyCode());
+
+            if (request.getServiceTypeId() != null) {
+                additionalService.setServiceType(serviceTypeRepository.findById(request.getServiceTypeId())
+                    .orElseThrow(() -> new RuntimeException("Service type not found with id: " + request.getServiceTypeId())));
+            }
+
+            if (request.getDistanceBandId() != null) {
+                com.example.demo.entity.DistanceBand distanceBand = distanceBandRepository.findById(request.getDistanceBandId())
+                    .orElseThrow(() -> new RuntimeException("Distance band not found with id: " + request.getDistanceBandId()));
+                additionalService.setDistanceBand(distanceBand);
+                BigDecimal feeAmount = calculateDistanceFee(request.getDistanceBandId());
+                additionalService.setFeeAmount(feeAmount);
+                additionalFeeTotal = additionalFeeTotal.add(feeAmount);
+            }
+
+            additionalServiceRepository.save(additionalService);
+        }
+
+        return additionalFeeTotal;
+    }
+
+    private void saveSpecialRequests(Order order, List<Long> specialRequestTypeIds) {
+        if (specialRequestTypeIds == null || specialRequestTypeIds.isEmpty()) {
+            return;
+        }
+
+        for (Long specialRequestTypeId : specialRequestTypeIds) {
+            SpecialRequestType specialRequestType = specialRequestTypeRepository.findById(specialRequestTypeId)
+                .orElseThrow(() -> new RuntimeException("Special request type not found with id: " + specialRequestTypeId));
+
+            OrderSpecialRequest specialRequest = new OrderSpecialRequest();
+            specialRequest.setId(new OrderSpecialRequestId(order.getId(), specialRequestTypeId));
+            specialRequest.setOrder(order);
+            specialRequest.setSpecialRequestType(specialRequestType);
+            specialRequestRepository.save(specialRequest);
+        }
+    }
+
+    private BigDecimal calculateDistanceFee(Long distanceBandId) {
+        if (distanceBandId == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return switch (distanceBandId.intValue()) {
+            case 1 -> BigDecimal.valueOf(100);
+            case 2 -> BigDecimal.valueOf(150);
+            case 3 -> BigDecimal.valueOf(200);
+            default -> BigDecimal.ZERO;
+        };
     }
 
     public Order updateOrder(Long id, Order order) {
