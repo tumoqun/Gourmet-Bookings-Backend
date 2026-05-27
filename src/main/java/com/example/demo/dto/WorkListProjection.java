@@ -13,7 +13,7 @@ public interface WorkListProjection {
     String getResellerName();
     Long getPicContactId();
     String getPicName();
-    // String getRef1();
+    String getRef1();
     Integer getAdultCount();
     Integer getChildCount();
     Boolean getIsPrivate();

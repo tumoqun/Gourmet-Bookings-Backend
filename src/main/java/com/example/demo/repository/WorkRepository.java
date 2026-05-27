@@ -34,6 +34,7 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               o.orderNumber as orderNumber,
               o.adultCount as adultCount,
               o.childCount as childCount,
+              o.ref1 as ref1,
 
               r.id as resellerId,
               r.name as resellerName,
