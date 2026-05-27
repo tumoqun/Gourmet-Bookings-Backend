@@ -6,9 +6,11 @@ import com.example.demo.dto.OrderServiceRequest;
 import com.example.demo.entity.Order;
 import com.example.demo.entity.OrderAdditionalService;
 import com.example.demo.entity.OrderSpecialRequest;
+import com.example.demo.entity.OrderSpecialRequestId;
 import com.example.demo.entity.OrderStatus;
 import com.example.demo.entity.OrderFinancialLine;
 import com.example.demo.entity.OrderStatusHistory;
+import com.example.demo.entity.SpecialRequestType;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.OrderServiceRepository;
 import com.example.demo.repository.OrderFinancialLineRepository;
@@ -17,6 +19,7 @@ import com.example.demo.repository.ServiceRepository;
 import com.example.demo.repository.AreaRepository;
 import com.example.demo.repository.DistanceBandRepository;
 import com.example.demo.repository.ServiceTypeRepository;
+import com.example.demo.repository.SpecialRequestTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,6 +53,7 @@ public class OrderService {
     private final DistanceBandRepository distanceBandRepository;
     private final com.example.demo.repository.OrderAdditionalServiceRepository additionalServiceRepository;
     private final com.example.demo.repository.OrderSpecialRequestRepository specialRequestRepository;
+    private final SpecialRequestTypeRepository specialRequestTypeRepository;
     private final com.example.demo.repository.WorkRepository workRepository;
     private final com.example.demo.repository.AssignmentRepository assignmentRepository;
     private final com.example.demo.repository.GuideRepository guideRepository;
@@ -281,6 +285,7 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
         saveOrderServices(savedOrder, request.getOrderServices());
         BigDecimal additionalFeeTotal = saveAdditionalServices(savedOrder, request.getAdditionalServices());
+        saveSpecialRequests(savedOrder, request.getSpecialRequestTypeIds());
         if (additionalFeeTotal.compareTo(BigDecimal.ZERO) > 0) {
             savedOrder.setTotalFeeAmount((savedOrder.getTotalFeeAmount() == null ? BigDecimal.ZERO : savedOrder.getTotalFeeAmount()).add(additionalFeeTotal));
             savedOrder = orderRepository.save(savedOrder);
@@ -349,6 +354,23 @@ public class OrderService {
         }
 
         return additionalFeeTotal;
+    }
+
+    private void saveSpecialRequests(Order order, List<Long> specialRequestTypeIds) {
+        if (specialRequestTypeIds == null || specialRequestTypeIds.isEmpty()) {
+            return;
+        }
+
+        for (Long specialRequestTypeId : specialRequestTypeIds) {
+            SpecialRequestType specialRequestType = specialRequestTypeRepository.findById(specialRequestTypeId)
+                .orElseThrow(() -> new RuntimeException("Special request type not found with id: " + specialRequestTypeId));
+
+            OrderSpecialRequest specialRequest = new OrderSpecialRequest();
+            specialRequest.setId(new OrderSpecialRequestId(order.getId(), specialRequestTypeId));
+            specialRequest.setOrder(order);
+            specialRequest.setSpecialRequestType(specialRequestType);
+            specialRequestRepository.save(specialRequest);
+        }
     }
 
     private BigDecimal calculateDistanceFee(Long distanceBandId) {
