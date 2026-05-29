@@ -22,6 +22,10 @@ public class Work {
     @Column(name = "order_id", nullable = false)
     private Long orderId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private Order order;
+
     @Column(name = "work_number", nullable = false, unique = true, length = 50)
     private String workNumber;
 

@@ -82,7 +82,7 @@ INSERT INTO orders (
     created_by_id, created_by_name,
     reseller_id, pic_contact_id, pic_email,
     original_agent_id,
-    ref_1, ref_2,
+    ref1, ref2,
     adult_count, child_count,
     currency_code, total_fee_amount,
     requested_at, submitted_at
