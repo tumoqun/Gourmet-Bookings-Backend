@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "distance_bands")
 @Data
@@ -21,4 +23,7 @@ public class DistanceBand {
     
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder;
+
+    @Column(name = "fee_amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal feeAmount;
 }

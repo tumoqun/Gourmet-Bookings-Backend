@@ -3,14 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.OrderCreateRequest;
 import com.example.demo.dto.OrderAdditionalServiceRequest;
 import com.example.demo.dto.OrderServiceRequest;
-import com.example.demo.entity.Order;
-import com.example.demo.entity.OrderAdditionalService;
-import com.example.demo.entity.OrderSpecialRequest;
-import com.example.demo.entity.OrderSpecialRequestId;
-import com.example.demo.entity.OrderStatus;
-import com.example.demo.entity.OrderFinancialLine;
-import com.example.demo.entity.OrderStatusHistory;
-import com.example.demo.entity.SpecialRequestType;
+import com.example.demo.entity.*;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.OrderServiceRepository;
 import com.example.demo.repository.OrderFinancialLineRepository;
@@ -163,7 +156,8 @@ public class OrderService {
                         toServiceTypeResponse(svc.getServiceType()),
                         svc.getName(),
                         svc.getIsPrivateAvailable(),
-                        svc.getIsActive()
+                        svc.getIsActive(),
+                        svc.getDurationMinutes()
                 ));
                 osr.setIsAdminModified(Boolean.TRUE.equals(os.getIsAdminModified()));
                 osr.setOriginalServiceId(os.getOriginalServiceId());
@@ -218,7 +212,8 @@ public class OrderService {
         return distanceBand == null ? null : new com.example.demo.dto.DistanceBandResponse(
             distanceBand.getId(),
             distanceBand.getLabel(),
-            distanceBand.getSortOrder()
+            distanceBand.getSortOrder(),
+            distanceBand.getFeeAmount()
         );
     }
 
@@ -378,12 +373,9 @@ public class OrderService {
             return BigDecimal.ZERO;
         }
 
-        return switch (distanceBandId.intValue()) {
-            case 1 -> BigDecimal.valueOf(100);
-            case 2 -> BigDecimal.valueOf(150);
-            case 3 -> BigDecimal.valueOf(200);
-            default -> BigDecimal.ZERO;
-        };
+        return distanceBandRepository.findById(distanceBandId)
+            .map(DistanceBand::getFeeAmount)
+            .orElse(BigDecimal.ZERO);
     }
 
     public Order updateOrder(Long id, Order order) {

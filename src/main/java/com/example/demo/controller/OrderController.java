@@ -214,7 +214,8 @@ public class OrderController {
                 toServiceTypeResponse(os.getService().getServiceType()),
                 os.getService().getName(),
                 os.getService().getIsPrivateAvailable(),
-                os.getService().getIsActive()
+                os.getService().getIsActive(),
+                os.getService().getDurationMinutes()
         ));
         // Admin override fields (V3)
         response.setIsAdminModified(Boolean.TRUE.equals(os.getIsAdminModified()));
@@ -264,7 +265,8 @@ public class OrderController {
         return distanceBand == null ? null : new DistanceBandResponse(
             distanceBand.getId(),
             distanceBand.getLabel(),
-            distanceBand.getSortOrder()
+            distanceBand.getSortOrder(),
+            distanceBand.getFeeAmount()
         );
     }
 }
