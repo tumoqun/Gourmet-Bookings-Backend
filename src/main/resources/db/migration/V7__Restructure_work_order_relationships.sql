@@ -32,3 +32,7 @@ ALTER TABLE works DROP COLUMN order_id;
 
 ALTER TABLE receipts ADD COLUMN fee DECIMAL(12, 2);
 ALTER TABLE receipts ADD COLUMN tax DECIMAL(12, 2);
+
+-- 6. Add field avatar, role to guides
+ALTER TABLE guides ADD COLUMN avatar VARCHAR(255);
+ALTER TABLE guides ADD COLUMN role VARCHAR(50);
