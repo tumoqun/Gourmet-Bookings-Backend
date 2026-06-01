@@ -16,12 +16,14 @@ public interface GuideRepository extends JpaRepository<Guide, Long> {
     @Query("SELECT g.fullName FROM Guide g " +
            "JOIN Assignment a ON g.id = a.guideId " +
            "JOIN Work w ON a.workId = w.id " +
-           "WHERE w.orderId = :orderId AND a.deletedAt IS NULL AND w.deletedAt IS NULL")
+           "JOIN w.orders o " +
+           "WHERE o.id = :orderId AND a.deletedAt IS NULL AND w.deletedAt IS NULL")
     Optional<String> findGuideNameByOrderId(@Param("orderId") Long orderId);
 
-    @Query("SELECT w.orderId, g.fullName FROM Guide g " +
+    @Query("SELECT o.id, g.fullName FROM Guide g " +
            "JOIN Assignment a ON g.id = a.guideId " +
            "JOIN Work w ON a.workId = w.id " +
-           "WHERE w.orderId IN :orderIds AND a.deletedAt IS NULL AND w.deletedAt IS NULL")
+           "JOIN w.orders o " +
+           "WHERE o.id IN :orderIds AND a.deletedAt IS NULL AND w.deletedAt IS NULL")
     List<Object[]> findGuideNamesByOrderIds(@Param("orderIds") List<Long> orderIds);
 }

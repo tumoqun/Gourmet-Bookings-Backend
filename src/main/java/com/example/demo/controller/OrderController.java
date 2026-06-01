@@ -204,7 +204,6 @@ public class OrderController {
         response.setTargetDate(os.getTargetDate());
         response.setStartTime(os.getStartTime());
         response.setTimeSlotCode(os.getTimeSlotCode());
-        response.setIsPrivate(os.getIsPrivate());
         response.setTimezone(os.getTimezone());
         response.setArea(toAreaResponse(os.getArea()));
         response.setServiceType(toServiceTypeResponse(os.getServiceType()));
@@ -244,7 +243,7 @@ public class OrderController {
     }
 
     private String resolveGuideForOrder(Long orderId) {
-        return workRepository.findByOrderIdAndDeletedAtIsNull(orderId).stream()
+        return workRepository.findByOrdersIdAndDeletedAtIsNull(orderId).stream()
                 .flatMap(work -> assignmentRepository.findByWorkId(work.getId()).stream())
                 .filter(a -> a.getDeletedAt() == null)
                 .findFirst()

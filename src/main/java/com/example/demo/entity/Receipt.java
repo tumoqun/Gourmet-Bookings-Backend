@@ -38,6 +38,12 @@ public class Receipt {
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "fee", precision = 12, scale = 2)
+    private BigDecimal fee;
+
+    @Column(name = "tax", precision = 12, scale = 2)
+    private BigDecimal tax;
+
     @Column(name = "currency_code", length = 3)
     private String currencyCode = "USD";
 

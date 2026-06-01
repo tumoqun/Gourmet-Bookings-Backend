@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.HashSet;
 
 @Entity
 @Table(name = "orders")
@@ -94,6 +96,12 @@ public class Order {
     
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
+    
+    @Column(name = "is_private", nullable = false)
+    private Boolean isPrivate = false;
+
+    @ManyToMany(mappedBy = "orders")
+    private Set<Work> works = new HashSet<>();
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

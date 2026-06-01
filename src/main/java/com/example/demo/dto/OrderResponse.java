@@ -17,6 +17,7 @@ public class OrderResponse {
     private OrderStatusResponse status;
     private String orderChannel;
     private Boolean isTentative;
+    private Boolean isPrivate;
     private UserResponse createdByUser;
     private String createdByName;
     private ResellerResponse reseller;

@@ -47,9 +47,7 @@ public class OrderService {
     @Column(name = "time_slot_code", length = 50)
     private String timeSlotCode;
     
-    @Column(name = "is_private", nullable = false)
-    private Boolean isPrivate = false;
-    
+
     @Column(name = "timezone", length = 50)
     private String timezone;
 

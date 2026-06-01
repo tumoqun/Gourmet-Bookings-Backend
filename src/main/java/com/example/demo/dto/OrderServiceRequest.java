@@ -26,6 +26,5 @@ public class OrderServiceRequest {
     private LocalDate targetDate;
     private LocalTime startTime;
     private String timeSlotCode;
-    private Boolean isPrivate = false;
     private String timezone;
 }

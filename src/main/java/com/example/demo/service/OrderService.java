@@ -97,6 +97,7 @@ public class OrderService {
             ));
             response.setOrderChannel(order.getOrderChannel());
             response.setIsTentative(order.getIsTentative());
+            response.setIsPrivate(order.getIsPrivate());
             response.setCreatedByName(order.getCreatedByName());
             response.setPicEmail(order.getPicEmail());
             response.setCopyEmail(order.getCopyEmail());
@@ -145,7 +146,6 @@ public class OrderService {
                 osr.setTargetDate(os.getTargetDate());
                 osr.setStartTime(os.getStartTime());
                 osr.setTimeSlotCode(os.getTimeSlotCode());
-                osr.setIsPrivate(os.getIsPrivate());
                 osr.setTimezone(os.getTimezone());
                 osr.setArea(toAreaResponse(os.getArea()));
                 osr.setServiceType(toServiceTypeResponse(os.getServiceType()));
@@ -242,6 +242,7 @@ public class OrderService {
         order.setOrderNumber(request.getOrderNumber());
         order.setOrderChannel(request.getOrderChannel());
         order.setIsTentative(Boolean.TRUE.equals(request.getIsTentative()));
+        order.setIsPrivate(Boolean.TRUE.equals(request.getIsPrivate()));
         order.setCreatedByName(request.getCreatedByName());
         order.setPicEmail(request.getPicEmail());
         order.setCopyEmail(request.getCopyEmail());
@@ -285,6 +286,11 @@ public class OrderService {
             savedOrder.setTotalFeeAmount((savedOrder.getTotalFeeAmount() == null ? BigDecimal.ZERO : savedOrder.getTotalFeeAmount()).add(additionalFeeTotal));
             savedOrder = orderRepository.save(savedOrder);
         }
+
+        if (Boolean.TRUE.equals(savedOrder.getIsPrivate())) {
+            createDedicatedWork(savedOrder);
+        }
+
         log.info("Created order with ID: {}", savedOrder.getId());
         return savedOrder;
     }
@@ -307,7 +313,6 @@ public class OrderService {
             orderService.setTargetDate(request.getTargetDate());
             orderService.setStartTime(request.getStartTime());
             orderService.setTimeSlotCode(request.getTimeSlotCode());
-            orderService.setIsPrivate(Boolean.TRUE.equals(request.getIsPrivate()));
             orderService.setTimezone(request.getTimezone());
             orderServiceRepository.save(orderService);
         }
@@ -483,5 +488,27 @@ public class OrderService {
             orderFinancialLineRepository.save(serviceFee);
             log.info("Created financial line for order ID: {}", order.getId());
         }
+    }
+
+    private void createDedicatedWork(Order order) {
+        Work work = new Work();
+        work.getOrders().add(order);
+        work.setWorkNumber("WRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        
+        List<com.example.demo.entity.OrderService> services = findServicesByOrderId(order.getId());
+        if (!services.isEmpty()) {
+            com.example.demo.entity.OrderService firstService = services.get(0);
+            work.setTourDate(firstService.getTargetDate());
+            work.setTourStartTime(firstService.getStartTime());
+            
+            if (firstService.getService() != null && firstService.getService().getDurationMinutes() != null && firstService.getStartTime() != null) {
+                work.setTourEndTime(firstService.getStartTime().plusMinutes(firstService.getService().getDurationMinutes()));
+            }
+        } else {
+            work.setTourDate(java.time.LocalDate.now());
+        }
+        
+        workRepository.save(work);
+        log.info("Created dedicated private Work for Order ID: {}", order.getId());
     }
 }

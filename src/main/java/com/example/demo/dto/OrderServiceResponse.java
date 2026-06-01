@@ -19,7 +19,6 @@ public class OrderServiceResponse {
     private LocalDate targetDate;
     private LocalTime startTime;
     private String timeSlotCode;
-    private Boolean isPrivate;
     private String timezone;
 
     // Admin override fields (V3)
