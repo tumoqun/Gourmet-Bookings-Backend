@@ -204,7 +204,6 @@ public class OrderController {
         response.setTargetDate(os.getTargetDate());
         response.setStartTime(os.getStartTime());
         response.setTimeSlotCode(os.getTimeSlotCode());
-        response.setIsPrivate(os.getIsPrivate());
         response.setTimezone(os.getTimezone());
         response.setArea(toAreaResponse(os.getArea()));
         response.setServiceType(toServiceTypeResponse(os.getServiceType()));
@@ -214,7 +213,8 @@ public class OrderController {
                 toServiceTypeResponse(os.getService().getServiceType()),
                 os.getService().getName(),
                 os.getService().getIsPrivateAvailable(),
-                os.getService().getIsActive()
+                os.getService().getIsActive(),
+                os.getService().getDurationMinutes()
         ));
         // Admin override fields (V3)
         response.setIsAdminModified(Boolean.TRUE.equals(os.getIsAdminModified()));
@@ -243,7 +243,7 @@ public class OrderController {
     }
 
     private String resolveGuideForOrder(Long orderId) {
-        return workRepository.findByOrderIdAndDeletedAtIsNull(orderId).stream()
+        return workRepository.findByOrdersIdAndDeletedAtIsNull(orderId).stream()
                 .flatMap(work -> assignmentRepository.findByWorkId(work.getId()).stream())
                 .filter(a -> a.getDeletedAt() == null)
                 .findFirst()
@@ -264,7 +264,8 @@ public class OrderController {
         return distanceBand == null ? null : new DistanceBandResponse(
             distanceBand.getId(),
             distanceBand.getLabel(),
-            distanceBand.getSortOrder()
+            distanceBand.getSortOrder(),
+            distanceBand.getFeeAmount()
         );
     }
 }

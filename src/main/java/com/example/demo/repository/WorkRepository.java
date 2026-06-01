@@ -19,7 +19,7 @@ import java.util.Optional;
 public interface WorkRepository extends JpaRepository<Work, Long> {
   Optional<Work> findByWorkNumber(String workNumber);
 
-  List<Work> findByOrderIdAndDeletedAtIsNull(Long orderId);
+  List<Work> findByOrdersIdAndDeletedAtIsNull(Long orderId);
 
   List<Work> findByStatusAndDeletedAtIsNull(String status);
 
@@ -44,7 +44,7 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               pc.id as picContactId,
               pc.name as picName,
 
-              os.isPrivate as isPrivate,
+              o.isPrivate as isPrivate,
 
               s.id as serviceId,
               s.name as serviceName,
@@ -53,7 +53,7 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               a.name as areaName
 
           FROM Work w
-          LEFT JOIN Order o ON o.id = w.orderId
+          LEFT JOIN w.orders o
           LEFT JOIN o.reseller r
           LEFT JOIN o.picContact pc
 
@@ -72,7 +72,7 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               COALESCE(SUM(o.adultCount), 0) as totalAdults,
               COALESCE(SUM(o.childCount), 0) as totalChildren
           FROM Work w
-          LEFT JOIN w.order o
+          LEFT JOIN w.orders o
           WHERE w.deletedAt IS NULL
       """)
   WorkGuestSummaryProjection getGuestSummary();

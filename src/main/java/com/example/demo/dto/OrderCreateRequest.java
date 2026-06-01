@@ -26,6 +26,8 @@ public class OrderCreateRequest {
     
     private Boolean isTentative = false;
     
+    private Boolean isPrivate = false;
+    
     private Long createdById;
     private String createdByName;
     

@@ -15,4 +15,5 @@ public class ServiceResponse {
     private String name;
     private Boolean isPrivateAvailable;
     private Boolean isActive;
+    private Integer durationMinutes;
 }

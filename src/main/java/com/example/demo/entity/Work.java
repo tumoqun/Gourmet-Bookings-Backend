@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Set;
+import java.util.HashSet;
 
 @Entity
 @Table(name = "works")
@@ -19,12 +21,13 @@ public class Work {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", nullable = false)
-    private Long orderId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", insertable = false, updatable = false)
-    private Order order;
+    @ManyToMany
+    @JoinTable(
+        name = "work_orders",
+        joinColumns = @JoinColumn(name = "work_id"),
+        inverseJoinColumns = @JoinColumn(name = "order_id")
+    )
+    private Set<Order> orders = new HashSet<>();
 
     @Column(name = "work_number", nullable = false, unique = true, length = 50)
     private String workNumber;

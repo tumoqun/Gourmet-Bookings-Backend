@@ -3,14 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.OrderCreateRequest;
 import com.example.demo.dto.OrderAdditionalServiceRequest;
 import com.example.demo.dto.OrderServiceRequest;
-import com.example.demo.entity.Order;
-import com.example.demo.entity.OrderAdditionalService;
-import com.example.demo.entity.OrderSpecialRequest;
-import com.example.demo.entity.OrderSpecialRequestId;
-import com.example.demo.entity.OrderStatus;
-import com.example.demo.entity.OrderFinancialLine;
-import com.example.demo.entity.OrderStatusHistory;
-import com.example.demo.entity.SpecialRequestType;
+import com.example.demo.entity.*;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.OrderServiceRepository;
 import com.example.demo.repository.OrderFinancialLineRepository;
@@ -104,6 +97,7 @@ public class OrderService {
             ));
             response.setOrderChannel(order.getOrderChannel());
             response.setIsTentative(order.getIsTentative());
+            response.setIsPrivate(order.getIsPrivate());
             response.setCreatedByName(order.getCreatedByName());
             response.setPicEmail(order.getPicEmail());
             response.setCopyEmail(order.getCopyEmail());
@@ -152,7 +146,6 @@ public class OrderService {
                 osr.setTargetDate(os.getTargetDate());
                 osr.setStartTime(os.getStartTime());
                 osr.setTimeSlotCode(os.getTimeSlotCode());
-                osr.setIsPrivate(os.getIsPrivate());
                 osr.setTimezone(os.getTimezone());
                 osr.setArea(toAreaResponse(os.getArea()));
                 osr.setServiceType(toServiceTypeResponse(os.getServiceType()));
@@ -163,7 +156,8 @@ public class OrderService {
                         toServiceTypeResponse(svc.getServiceType()),
                         svc.getName(),
                         svc.getIsPrivateAvailable(),
-                        svc.getIsActive()
+                        svc.getIsActive(),
+                        svc.getDurationMinutes()
                 ));
                 osr.setIsAdminModified(Boolean.TRUE.equals(os.getIsAdminModified()));
                 osr.setOriginalServiceId(os.getOriginalServiceId());
@@ -218,7 +212,8 @@ public class OrderService {
         return distanceBand == null ? null : new com.example.demo.dto.DistanceBandResponse(
             distanceBand.getId(),
             distanceBand.getLabel(),
-            distanceBand.getSortOrder()
+            distanceBand.getSortOrder(),
+            distanceBand.getFeeAmount()
         );
     }
 
@@ -247,6 +242,7 @@ public class OrderService {
         order.setOrderNumber(request.getOrderNumber());
         order.setOrderChannel(request.getOrderChannel());
         order.setIsTentative(Boolean.TRUE.equals(request.getIsTentative()));
+        order.setIsPrivate(Boolean.TRUE.equals(request.getIsPrivate()));
         order.setCreatedByName(request.getCreatedByName());
         order.setPicEmail(request.getPicEmail());
         order.setCopyEmail(request.getCopyEmail());
@@ -290,6 +286,11 @@ public class OrderService {
             savedOrder.setTotalFeeAmount((savedOrder.getTotalFeeAmount() == null ? BigDecimal.ZERO : savedOrder.getTotalFeeAmount()).add(additionalFeeTotal));
             savedOrder = orderRepository.save(savedOrder);
         }
+
+        if (Boolean.TRUE.equals(savedOrder.getIsPrivate())) {
+            createDedicatedWork(savedOrder);
+        }
+
         log.info("Created order with ID: {}", savedOrder.getId());
         return savedOrder;
     }
@@ -312,7 +313,6 @@ public class OrderService {
             orderService.setTargetDate(request.getTargetDate());
             orderService.setStartTime(request.getStartTime());
             orderService.setTimeSlotCode(request.getTimeSlotCode());
-            orderService.setIsPrivate(Boolean.TRUE.equals(request.getIsPrivate()));
             orderService.setTimezone(request.getTimezone());
             orderServiceRepository.save(orderService);
         }
@@ -378,12 +378,9 @@ public class OrderService {
             return BigDecimal.ZERO;
         }
 
-        return switch (distanceBandId.intValue()) {
-            case 1 -> BigDecimal.valueOf(100);
-            case 2 -> BigDecimal.valueOf(150);
-            case 3 -> BigDecimal.valueOf(200);
-            default -> BigDecimal.ZERO;
-        };
+        return distanceBandRepository.findById(distanceBandId)
+            .map(DistanceBand::getFeeAmount)
+            .orElse(BigDecimal.ZERO);
     }
 
     public Order updateOrder(Long id, Order order) {
@@ -491,5 +488,27 @@ public class OrderService {
             orderFinancialLineRepository.save(serviceFee);
             log.info("Created financial line for order ID: {}", order.getId());
         }
+    }
+
+    private void createDedicatedWork(Order order) {
+        Work work = new Work();
+        work.getOrders().add(order);
+        work.setWorkNumber("WRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        
+        List<com.example.demo.entity.OrderService> services = findServicesByOrderId(order.getId());
+        if (!services.isEmpty()) {
+            com.example.demo.entity.OrderService firstService = services.get(0);
+            work.setTourDate(firstService.getTargetDate());
+            work.setTourStartTime(firstService.getStartTime());
+            
+            if (firstService.getService() != null && firstService.getService().getDurationMinutes() != null && firstService.getStartTime() != null) {
+                work.setTourEndTime(firstService.getStartTime().plusMinutes(firstService.getService().getDurationMinutes()));
+            }
+        } else {
+            work.setTourDate(java.time.LocalDate.now());
+        }
+        
+        workRepository.save(work);
+        log.info("Created dedicated private Work for Order ID: {}", order.getId());
     }
 }
