@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkGuestSummaryProjection;
 import com.example.demo.dto.WorkListProjection;
 import com.example.demo.entity.Work;
@@ -37,5 +38,10 @@ public class WorkService {
 
   public WorkGuestSummaryProjection getGuestSummary() {
     return workRepository.getGuestSummary();
+  }
+
+  public WorkDetailProjection getWorkById(Long id) {
+    return workRepository.findWorkDetailById(id)
+        .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
   }
 }

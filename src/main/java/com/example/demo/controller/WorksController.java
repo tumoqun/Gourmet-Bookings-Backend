@@ -29,5 +29,10 @@ public class WorksController {
         WorkGuestSummaryProjection summary = workService.getGuestSummary();
         return ResponseEntity.ok(summary);
     }
+
+    @GetMapping("/{id}")
+    public WorkDetailProjection getWorkById(@PathVariable Long id) {
+      return workService.getWorkById(id);
+    }
 }
 
