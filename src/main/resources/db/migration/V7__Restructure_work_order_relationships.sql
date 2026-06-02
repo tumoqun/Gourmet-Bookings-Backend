@@ -35,4 +35,5 @@ ALTER TABLE receipts ADD COLUMN tax DECIMAL(12, 2);
 
 -- 6. Add field avatar, role to guides
 ALTER TABLE guides ADD COLUMN avatar VARCHAR(255);
-ALTER TABLE guides ADD COLUMN role VARCHAR(50);
+ALTER TABLE assignments ADD COLUMN is_calendar_invitation BOOLEAN DEFAULT FALSE;
+ALTER TABLE assignments ADD COLUMN role VARCHAR(50);
