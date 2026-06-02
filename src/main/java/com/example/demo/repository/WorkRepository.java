@@ -2,7 +2,11 @@ package com.example.demo.repository;
 
 import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkGuestSummaryProjection;
+import com.example.demo.dto.WorkGuideDetailProjection;
+import com.example.demo.dto.WorkGuideProjection;
 import com.example.demo.dto.WorkListProjection;
+import com.example.demo.dto.WorkOrderListProjection;
+import com.example.demo.dto.WorkOrderProjection;
 import com.example.demo.entity.Work;
 
 import org.springframework.data.domain.Page;
@@ -30,7 +34,15 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               w.id as id,
               w.workNumber as workNumber,
               w.status as status,
-              w.tourDate as tourDate,
+              w.tourDate as tourDate
+          FROM Work w
+          WHERE w.deletedAt IS NULL
+      """)
+  Page<WorkListProjection> findWorkPage(Pageable pageable);
+
+  @Query("""
+          SELECT
+              w.id as workId,
 
               o.id as orderId,
               o.orderNumber as orderNumber,
@@ -53,19 +65,46 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               a.name as areaName
 
           FROM Work w
-          LEFT JOIN w.orders o
+          JOIN w.orders o
+
           LEFT JOIN o.reseller r
           LEFT JOIN o.picContact pc
 
-          LEFT JOIN OrderService os ON os.order.id = o.id
-              AND os.deletedAt IS NULL
+          LEFT JOIN OrderService os
+              ON os.order.id = o.id
+             AND os.deletedAt IS NULL
 
           LEFT JOIN os.service s
           LEFT JOIN s.area a
 
-          WHERE w.deletedAt IS NULL
+          WHERE w.id IN :workIds
+            AND w.deletedAt IS NULL
       """)
-  Page<WorkListProjection> findAllList(Pageable pageable);
+  List<WorkOrderProjection> findOrdersByWorkIds(
+      @Param("workIds") List<Long> workIds);
+
+  @Query("""
+          SELECT
+              a.workId as workId,
+
+              g.id as guideId,
+              g.fullName as guideFullName,
+              g.email as guideEmail,
+              g.phone as guidePhone,
+              g.isActive as guideIsActive,
+              g.avatar as guideAvatar,
+
+              a.role as guideRole
+
+          FROM Assignment a
+          JOIN a.guide g
+
+          WHERE a.workId IN :workIds
+            AND a.deletedAt IS NULL
+            AND g.isActive = true
+      """)
+  List<WorkGuideProjection> findGuidesByWorkIds(
+      @Param("workIds") List<Long> workIds);
 
   @Query("""
           SELECT
@@ -77,44 +116,116 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
       """)
   WorkGuestSummaryProjection getGuestSummary();
 
+  @Query(value = """
+          SELECT
+              w.id,
+              w.work_number as workNumber,
+              w.status,
+              w.tour_date as tourDate,
+              w.tour_start_time as tourStartTime,
+              w.tour_end_time as tourEndTime,
+              w.location_name as locationName,
+              w.location_address as locationAddress,
+              w.notes,
+
+              COALESCE(SUM(o.adult_count),0) as adultCount,
+              COALESCE(SUM(o.child_count),0) as childCount,
+
+              (
+                  SELECT o2.is_private
+                  FROM work_orders wo2
+                  JOIN orders o2
+                      ON o2.id = wo2.order_id
+                  WHERE wo2.work_id = w.id
+                  ORDER BY o2.id
+                  LIMIT 1
+              ) as isPrivate,
+
+              (
+                  SELECT s.name
+                  FROM work_orders wo3
+                  JOIN order_services os
+                      ON os.order_id = wo3.order_id
+                  JOIN services s
+                      ON s.id = os.service_id
+                  WHERE wo3.work_id = w.id
+                    AND os.deleted_at IS NULL
+                  ORDER BY os.id
+                  LIMIT 1
+              ) as serviceName,
+
+              (
+                  SELECT a.name
+                  FROM work_orders wo3
+                  JOIN order_services os
+                      ON os.order_id = wo3.order_id
+                  JOIN services s
+                      ON s.id = os.service_id
+                  JOIN areas a
+                      ON a.id = s.area_id
+                  WHERE wo3.work_id = w.id
+                    AND os.deleted_at IS NULL
+                  ORDER BY os.id
+                  LIMIT 1
+              ) as areaName
+
+          FROM works w
+          LEFT JOIN work_orders wo
+              ON wo.work_id = w.id
+          LEFT JOIN orders o
+              ON o.id = wo.order_id
+
+          WHERE w.id = :id
+            AND w.deleted_at IS NULL
+
+          GROUP BY w.id
+      """, nativeQuery = true)
+  Optional<WorkDetailProjection> findWorkDetailById(
+      @Param("id") Long id);
+
   @Query("""
           SELECT
-              w.id as id,
-              w.workNumber as workNumber,
-              w.status as status,
-              w.tourDate as tourDate,
-              w.tourStartTime as tourStartTime,
-              w.tourEndTime as tourEndTime,
-              w.locationName as locationName,
-              w.locationAddress as locationAddress,
-              w.notes as notes,
-
               o.id as orderId,
+
+              r.name as reseller,
+
+              ag.name as originalAgent,
+
+              o.ref1 as ref1,
               o.adultCount as adultCount,
               o.childCount as childCount,
+              o.totalFeeAmount as totalFeeAmount,
 
-              os.isPrivate as isPrivate,
-
-              s.name as serviceName,
-
-              a.id as areaId,
-              a.name as areaName
+              st.label as status
 
           FROM Work w
-          LEFT JOIN Order o ON o.id = w.orderId
+          JOIN w.orders o
 
-          LEFT JOIN OrderService os ON os.id = (
-              SELECT MIN(os2.id)
-              FROM OrderService os2
-              WHERE os2.order.id = o.id
-              AND os2.deletedAt IS NULL
-          )
+          LEFT JOIN o.reseller r
+          LEFT JOIN o.originalAgent ag
+          LEFT JOIN o.status st
 
-          LEFT JOIN os.service s
-          LEFT JOIN s.area a
-
-          WHERE w.deletedAt IS NULL
-          AND w.id = :id
+          WHERE w.id = :workId
       """)
-  Optional<WorkDetailProjection> findWorkDetailById(@Param("id") Long id);
+  List<WorkOrderListProjection> findOrdersByWorkId(
+      @Param("workId") Long workId);
+
+  @Query("""
+          SELECT
+              g.fullName as name,
+              g.phone as phone,
+
+              a.status as status,
+              a.rejectionReason as rejectionReason,
+              a.isCalendarInvitation as isCalendarInvitation,
+              a.role as role
+
+          FROM Assignment a
+          JOIN a.guide g
+
+          WHERE a.workId = :workId
+            AND a.deletedAt IS NULL
+      """)
+  List<WorkGuideDetailProjection> findGuidesByWorkId(
+      @Param("workId") Long workId);
 }

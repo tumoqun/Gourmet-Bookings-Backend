@@ -5,7 +5,10 @@ import com.example.demo.service.WorkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,25 +17,38 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Slf4j
 public class WorksController {
-    private final WorkService workService;
+  private final WorkService workService;
 
-    @GetMapping
-    public ResponseEntity<Page<WorkListProjection>> getWorks(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-      return ResponseEntity.ok(
-          workService.getWorks(page, size));
-    }
+  @GetMapping
+  public ResponseEntity<Page<WorkListResponse>> getAll(
+      Pageable pageable) {
+      
+    return ResponseEntity.ok(
+          workService.findAll(pageable)
+    );
+  }
+  
+  @GetMapping("/guests")
+  public ResponseEntity<WorkGuestSummaryProjection> getGuestSummary() {
+    WorkGuestSummaryProjection summary = workService.getGuestSummary();
+    return ResponseEntity.ok(summary);
+  }
 
-    @GetMapping("/guests")
-    public ResponseEntity<WorkGuestSummaryProjection> getGuestSummary() {
-        WorkGuestSummaryProjection summary = workService.getGuestSummary();
-        return ResponseEntity.ok(summary);
-    }
+  @GetMapping("/{id}")
+  public WorkDetailProjection getWorkById(@PathVariable Long id) {
+    return workService.getWorkById(id);
+  }
 
-    @GetMapping("/{id}")
-    public WorkDetailProjection getWorkById(@PathVariable Long id) {
-      return workService.getWorkById(id);
-    }
+  @GetMapping("/{id}/orders")
+  public ResponseEntity<List<WorkOrderListProjection>> getWorkOrdersByWorkId(@PathVariable Long id) {
+    List<WorkOrderListProjection> orders = workService.getWorkOrderListByWorkId(id);
+    return ResponseEntity.ok(orders);
+  }
+
+  @GetMapping("/{id}/guides")
+  public ResponseEntity<List<WorkGuideDetailProjection>> getWorkGuidesByWorkId(@PathVariable Long id) {
+    List<WorkGuideDetailProjection> guides = workService.getWorkGuidesByWorkId(id);
+    return ResponseEntity.ok(guides);
+  }
 }
 
