@@ -27,4 +27,7 @@ public class Guide {
     
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    @Column(name = "avatar", nullable = true, length = 200)
+    private String avatar;
 }
