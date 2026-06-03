@@ -8,7 +8,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.demo.entity.Itinerary;
+import com.example.demo.dto.WorkItineraryStopList;
 import com.example.demo.service.ItineraryService;
 
 @Slf4j
@@ -18,9 +18,9 @@ import com.example.demo.service.ItineraryService;
 public class ItineraryController {
   private final ItineraryService itineraryService;
 
-  @GetMapping("/by-work")
-  public ResponseEntity<List<Itinerary>> getAllItineraries(@RequestParam Long workId) {
-    List<Itinerary> itineraries = itineraryService.findByWorkIdOrderByDayNumberAsc(workId);
-    return ResponseEntity.ok(itineraries);
+  @GetMapping("/stops/by-work")
+  public ResponseEntity<List<WorkItineraryStopList>> getItineraryStopsByWork(@RequestParam Long workId) {
+    List<WorkItineraryStopList> stops = itineraryService.findStopsByWorkId(workId);
+    return ResponseEntity.ok(stops);
   }
 }
