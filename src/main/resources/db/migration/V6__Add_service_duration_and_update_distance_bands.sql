@@ -18,8 +18,8 @@ UPDATE services SET duration_minutes = 120 WHERE service_type_id = 3;
 -- First, clear existing distance bands
 DELETE FROM distance_bands;
 
--- Reset auto-increment counter (for MySQL)
-ALTER TABLE distance_bands AUTO_INCREMENT = 1;
+-- Add field fee_amount
+ALTER TABLE distance_bands ADD COLUMN fee_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00;
 
 -- Insert new distance bands
 INSERT INTO distance_bands (label, sort_order, fee_amount) VALUES
