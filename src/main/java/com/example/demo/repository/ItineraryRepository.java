@@ -7,6 +7,5 @@ import java.util.List;
 
 @Repository
 public interface ItineraryRepository extends JpaRepository<Itinerary, Long> {
-    List<Itinerary> findByWorkIdOrderByDayNumberAsc(Long workId);
+	List<Itinerary> findByWorkIdOrderByDayNumberAsc(Long workId);
 }
-

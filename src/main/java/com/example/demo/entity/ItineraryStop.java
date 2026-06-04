@@ -42,6 +42,12 @@ public class ItineraryStop {
     @Column(name = "special_notes", columnDefinition = "TEXT")
     private String specialNotes;
 
+    @Column(name = "status", nullable = true, length = 50)
+    private String status;
+
+    @Column(name = "added_by", nullable = true)
+    private String addedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

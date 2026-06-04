@@ -1,15 +1,33 @@
 package com.example.demo.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.dto.GuideResponse;
+import com.example.demo.dto.OrderInfoResponse;
+import com.example.demo.dto.ServiceInfoResponse;
+import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkGuestSummaryProjection;
+import com.example.demo.dto.WorkGuideDetailProjection;
+import com.example.demo.dto.WorkGuideProjection;
 import com.example.demo.dto.WorkListProjection;
+import com.example.demo.dto.WorkListResponse;
+import com.example.demo.dto.WorkOrderListProjection;
+import com.example.demo.dto.WorkOrderProjection;
 import com.example.demo.entity.Work;
 import com.example.demo.repository.WorkRepository;
 
@@ -24,18 +42,158 @@ import lombok.extern.slf4j.Slf4j;
 public class WorkService {
   private final WorkRepository workRepository;
 
-  public Page<WorkListProjection> getWorks(
-      int page,
-      int size) {
-    Pageable pageable = PageRequest.of(
-        page,
-        size,
-        Sort.by(Sort.Direction.DESC, "id"));
+  public Page<WorkListResponse> findAll(Pageable pageable) {
 
-    return workRepository.findAllList(pageable);
+    Page<WorkListProjection> workPage = workRepository.findWorkPage(pageable);
+
+    if (workPage.isEmpty()) {
+      return Page.empty(pageable);
+    }
+
+    List<Long> workIds = workPage.getContent()
+        .stream()
+        .map(WorkListProjection::getId)
+        .toList();
+
+    List<WorkOrderProjection> rows = workRepository.findOrdersByWorkIds(workIds);
+
+    List<WorkGuideProjection> guideRows = workRepository.findGuidesByWorkIds(workIds);
+
+    Map<Long, List<GuideResponse>> guideMap = guideRows.stream()
+        .collect(Collectors.groupingBy(
+            WorkGuideProjection::getWorkId,
+            Collectors.collectingAndThen(
+                Collectors.toList(),
+                guides -> {
+                  WorkGuideProjection selected = guides.stream()
+                      .filter(g -> "leader".equalsIgnoreCase(g.getGuideRole()))
+                      .findFirst()
+                      .orElse(guides.get(0));
+                  return List.of(
+                      GuideResponse.builder()
+                          .id(selected.getGuideId())
+                          .fullName(selected.getGuideFullName())
+                          .email(selected.getGuideEmail())
+                          .phone(selected.getGuidePhone())
+                          .isActive(selected.getGuideIsActive())
+                          .avatar(selected.getGuideAvatar())
+                          .build());
+                })));
+    Map<Long, Map<Long, OrderInfoResponse>> workOrderMap = new LinkedHashMap<>();
+
+    Map<Long, Set<Long>> orderServiceMap = new HashMap<>();
+
+    for (WorkOrderProjection row : rows) {
+
+      Long workId = row.getWorkId();
+      Long orderId = row.getOrderId();
+
+      Map<Long, OrderInfoResponse> orderMap = workOrderMap.computeIfAbsent(
+          workId,
+          k -> new LinkedHashMap<>());
+
+      OrderInfoResponse order = orderMap.computeIfAbsent(
+          orderId,
+          k -> buildOrder(row));
+
+      Long serviceId = row.getServiceId();
+
+      if (serviceId != null) {
+
+        Set<Long> serviceIds = orderServiceMap.computeIfAbsent(
+            orderId,
+            k -> new HashSet<>());
+
+        if (serviceIds.add(serviceId)) {
+
+          order.getServices().add(
+              new ServiceInfoResponse(
+                  serviceId,
+                  row.getServiceName(),
+                  row.getAreaId(),
+                  row.getAreaName()));
+        }
+      }
+    }
+
+    List<WorkListResponse> content = workPage.getContent()
+        .stream()
+        .map(work -> {
+
+          WorkListResponse dto = new WorkListResponse();
+
+          dto.setId(work.getId());
+          dto.setWorkNumber(work.getWorkNumber());
+          dto.setStatus(work.getStatus());
+          dto.setTourDate(work.getTourDate());
+
+          dto.setOrders(
+              new ArrayList<>(
+                  workOrderMap
+                      .getOrDefault(
+                          work.getId(),
+                          Collections.emptyMap())
+                      .values()));
+          dto.setGuides(
+              guideMap.get(work.getId()));
+          return dto;
+        })
+        .toList();
+
+    return new PageImpl<>(
+        content,
+        pageable,
+        workPage.getTotalElements());
+  }
+
+  private OrderInfoResponse buildOrder(
+      WorkOrderProjection row) {
+
+    OrderInfoResponse dto = new OrderInfoResponse();
+
+    dto.setId(row.getOrderId());
+    dto.setOrderNumber(row.getOrderNumber());
+
+    dto.setAdultCount(row.getAdultCount());
+    dto.setChildCount(row.getChildCount());
+
+    dto.setRef1(row.getRef1());
+
+    dto.setResellerId(row.getResellerId());
+    dto.setResellerName(row.getResellerName());
+
+    dto.setPicContactId(row.getPicContactId());
+    dto.setPicName(row.getPicName());
+
+    dto.setIsPrivate(row.getIsPrivate());
+
+    dto.setServices(new ArrayList<>());
+
+    return dto;
   }
 
   public WorkGuestSummaryProjection getGuestSummary() {
     return workRepository.getGuestSummary();
+  }
+
+  public WorkDetailProjection getWorkById(Long id) {
+    return workRepository.findWorkDetailById(id)
+    .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
+  }
+
+  public List<WorkOrderListProjection> getWorkOrderListByWorkId(Long workId) {
+    List<WorkOrderListProjection> orders = workRepository.findOrdersByWorkId(workId);
+    if (orders == null || orders.isEmpty()) {
+      throw new RuntimeException("Work order not found for work id: " + workId);
+    }
+    return orders;
+  }
+
+  public List<WorkGuideDetailProjection> getWorkGuidesByWorkId(Long workId) {
+    List<WorkGuideDetailProjection> guides = workRepository.findGuidesByWorkId(workId);
+    if (guides == null || guides.isEmpty()) {
+      throw new RuntimeException("Work guides not found for work id: " + workId);
+    }
+    return guides;
   }
 }

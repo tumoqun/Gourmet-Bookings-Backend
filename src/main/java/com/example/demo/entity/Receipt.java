@@ -77,6 +77,9 @@ public class Receipt {
     @Column(name = "verified_at")
     private LocalDateTime verifiedAt;
 
+    @Column(name = "submitted_by", nullable = true, length = 100)
+    private String submittedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

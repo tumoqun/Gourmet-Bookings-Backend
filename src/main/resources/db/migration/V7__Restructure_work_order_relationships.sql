@@ -33,7 +33,14 @@ ALTER TABLE works DROP COLUMN order_id;
 ALTER TABLE receipts ADD COLUMN fee DECIMAL(12, 2);
 ALTER TABLE receipts ADD COLUMN tax DECIMAL(12, 2);
 
--- 6. Add field avatar, role to guides
+-- 6. Add field avatar, role, is_calendar_invitation to guides
 ALTER TABLE guides ADD COLUMN avatar VARCHAR(255);
 ALTER TABLE assignments ADD COLUMN is_calendar_invitation BOOLEAN DEFAULT FALSE;
 ALTER TABLE assignments ADD COLUMN role VARCHAR(50);
+
+-- 7. Add field status, added_by to itinerary_stops
+ALTER TABLE itinerary_stops ADD COLUMN status VARCHAR(50);
+ALTER TABLE itinerary_stops ADD COLUMN added_by VARCHAR(50);
+
+-- 8. Add field submitted_by to receipts
+ALTER TABLE receipts ADD COLUMN submitted_by VARCHAR(100);
