@@ -113,6 +113,28 @@ public class OrderController {
         }
     }
 
+    @PostMapping("/{id}/offer")
+    public ResponseEntity<OrderResponse> sendOffer(@PathVariable Long id, @RequestBody OfferCreateRequest request) {
+        try {
+            Order order = orderService.sendOffer(id, request);
+            return ResponseEntity.ok(toOrderResponse(order));
+        } catch (Exception e) {
+            log.error("Error sending offer for order with id: {}", id, e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<OrderResponse> confirmOrder(@PathVariable Long id) {
+        try {
+            Order order = orderService.confirmOrder(id);
+            return ResponseEntity.ok(toOrderResponse(order));
+        } catch (Exception e) {
+            log.error("Error confirming order with id: {}", id, e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     // =====================================================
     // Mapping helpers
     // =====================================================
