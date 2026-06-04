@@ -20,8 +20,16 @@ public class Assignment {
     @Column(name = "work_id", nullable = false)
     private Long workId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_id", insertable = false, updatable = false)
+    private Work work;
+
     @Column(name = "guide_id", nullable = false)
     private Long guideId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guide_id", insertable = false, updatable = false)
+    private Guide guide;
 
     @Column(name = "status", nullable = false, length = 50)
     private String status = "pending";
@@ -55,4 +63,10 @@ public class Assignment {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Column(name = "is_calendar_invitation", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isCalendarInvitation = false;
+
+    @Column(name = "role", nullable = true, length = 50)
+    private String role;
 }
