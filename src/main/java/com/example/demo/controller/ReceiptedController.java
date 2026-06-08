@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.demo.dto.WorkReceiptResponse;
@@ -15,6 +16,7 @@ import com.example.demo.service.ReceiptService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/receipts")
+@PreAuthorize("hasAuthority('RECEIPTS_OPS_READ')")
 public class ReceiptedController {
   private final ReceiptService receiptService;
 

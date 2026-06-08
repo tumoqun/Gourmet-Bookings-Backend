@@ -7,6 +7,7 @@ import com.example.demo.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,12 +28,14 @@ public class OrderController {
     private final GuideRepository guideRepository;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ORDERS_READ')")
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
         List<OrderResponse> responses = orderService.findAllActiveResponses();
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ORDERS_READ')")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         Optional<Order> order = orderService.findById(id);
         return order.map(value -> ResponseEntity.ok(toOrderResponse(value)))
@@ -40,6 +43,7 @@ public class OrderController {
     }
 
     @GetMapping("/number/{orderNumber}")
+    @PreAuthorize("hasAuthority('ORDERS_READ')")
     public ResponseEntity<OrderResponse> getOrderByNumber(@PathVariable String orderNumber) {
         Optional<Order> order = orderService.findByOrderNumber(orderNumber);
         return order.map(value -> ResponseEntity.ok(toOrderResponse(value)))
@@ -47,18 +51,21 @@ public class OrderController {
     }
 
     @GetMapping("/status/{statusId}")
+    @PreAuthorize("hasAuthority('ORDERS_READ')")
     public ResponseEntity<List<OrderResponse>> getOrdersByStatus(@PathVariable Long statusId) {
         List<Order> orders = orderService.findByStatusId(statusId);
         return ResponseEntity.ok(orders.stream().map(this::toOrderResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/reseller/{resellerId}")
+    @PreAuthorize("hasAuthority('ORDERS_READ')")
     public ResponseEntity<List<OrderResponse>> getOrdersByReseller(@PathVariable Long resellerId) {
         List<Order> orders = orderService.findByResellerId(resellerId);
         return ResponseEntity.ok(orders.stream().map(this::toOrderResponse).collect(Collectors.toList()));
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ORDERS_WRITE')")
     public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderCreateRequest order) {
         try {
             Order createdOrder = orderService.createOrder(order);
@@ -70,6 +77,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ORDERS_WRITE')")
     public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order order) {
         try {
             Order updatedOrder = orderService.updateOrder(id, order);
@@ -81,6 +89,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ORDERS_DELETE')")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
         try {
             orderService.deleteOrder(id);
@@ -92,6 +101,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAuthority('ORDERS_WRITE')")
     public ResponseEntity<OrderResponse> submitOrder(@PathVariable Long id) {
         try {
             Order submittedOrder = orderService.submitOrder(id);
@@ -103,6 +113,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAuthority('ORDERS_WRITE')")
     public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long id, @RequestBody(required = false) String note) {
         try {
             Order cancelledOrder = orderService.cancelOrder(id, note);
@@ -114,6 +125,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/offer")
+    @PreAuthorize("hasAuthority('ORDERS_OFFER')")
     public ResponseEntity<OrderResponse> sendOffer(@PathVariable Long id, @RequestBody OfferCreateRequest request) {
         try {
             Order order = orderService.sendOffer(id, request);
@@ -125,6 +137,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAuthority('ORDERS_CONFIRM')")
     public ResponseEntity<OrderResponse> confirmOrder(@PathVariable Long id) {
         try {
             Order order = orderService.confirmOrder(id);

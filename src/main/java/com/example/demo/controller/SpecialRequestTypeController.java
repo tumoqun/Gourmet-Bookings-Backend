@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.SpecialRequestTypeResponse;
 import com.example.demo.repository.SpecialRequestTypeRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +21,7 @@ public class SpecialRequestTypeController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public List<SpecialRequestTypeResponse> getAll() {
         return repository.findAll().stream()
                 .map(srt -> new SpecialRequestTypeResponse(srt.getId(), srt.getCode(), srt.getLabel()))

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.demo.dto.WorkItineraryStopList;
@@ -15,6 +16,7 @@ import com.example.demo.service.ItineraryService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/itineraries")
+@PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
 public class ItineraryController {
   private final ItineraryService itineraryService;
 

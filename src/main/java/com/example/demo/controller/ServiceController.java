@@ -8,6 +8,7 @@ import com.example.demo.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,27 +23,32 @@ public class ServiceController {
     private final CatalogService catalogService;
 
     @GetMapping("/areas")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<Area>> getAllAreas() {
         return ResponseEntity.ok(catalogService.findAllAreas());
     }
 
     @GetMapping("/service-types")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<ServiceType>> getAllServiceTypes() {
         return ResponseEntity.ok(catalogService.findAllServiceTypes());
     }
 
     @GetMapping("/distance-bands")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<DistanceBand>> getAllDistanceBands() {
         return ResponseEntity.ok(catalogService.findAllDistanceBands());
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<Service>> getAllServices() {
         List<Service> services = catalogService.findAllActiveServices();
         return ResponseEntity.ok(services);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<Service> getServiceById(@PathVariable Long id) {
         Optional<Service> service = catalogService.findServiceById(id);
         return service.map(ResponseEntity::ok)
@@ -50,18 +56,21 @@ public class ServiceController {
     }
 
     @GetMapping("/area/{areaId}")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<Service>> getServicesByArea(@PathVariable Long areaId) {
         List<Service> services = catalogService.findServicesByArea(areaId);
         return ResponseEntity.ok(services);
     }
 
     @GetMapping("/type/{serviceTypeId}")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<Service>> getServicesByType(@PathVariable Long serviceTypeId) {
         List<Service> services = catalogService.findServicesByType(serviceTypeId);
         return ResponseEntity.ok(services);
     }
 
     @GetMapping("/area/{areaId}/type/{serviceTypeId}")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<Service>> getServicesByAreaAndType(
             @PathVariable Long areaId, 
             @PathVariable Long serviceTypeId) {
@@ -70,12 +79,14 @@ public class ServiceController {
     }
 
     @GetMapping("/private")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
     public ResponseEntity<List<Service>> getPrivateServices() {
         List<Service> services = catalogService.findPrivateServices();
         return ResponseEntity.ok(services);
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
     public ResponseEntity<Service> createService(@RequestBody Service service) {
         try {
             Service createdService = catalogService.createService(service);
@@ -87,6 +98,7 @@ public class ServiceController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
     public ResponseEntity<Service> updateService(@PathVariable Long id, @RequestBody Service service) {
         try {
             Service updatedService = catalogService.updateService(id, service);

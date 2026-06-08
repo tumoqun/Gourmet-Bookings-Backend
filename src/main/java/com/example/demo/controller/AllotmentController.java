@@ -5,6 +5,7 @@ import com.example.demo.entity.Allotment;
 import com.example.demo.repository.AllotmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/allotments")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
 public class AllotmentController {
 
     private final AllotmentRepository allotmentRepository;
