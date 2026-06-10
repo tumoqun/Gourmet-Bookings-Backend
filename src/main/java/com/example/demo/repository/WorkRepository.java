@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.dto.OrderSpecialRequestProjection;
 import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkGuestSummaryProjection;
 import com.example.demo.dto.WorkGuideDetailProjection;
@@ -206,8 +207,37 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
           LEFT JOIN o.status st
 
           WHERE w.id = :workId
+          AND (
+              :status = 'all'
+              OR (
+                  :status = 'active'
+                  AND st.code NOT IN ('CANCELLED', 'ENDED', 'CLOSED')
+              )
+          )
       """)
   List<WorkOrderListProjection> findOrdersByWorkId(
+      @Param("workId") Long workId,
+      @Param("status") String status);
+
+  @Query("""
+          SELECT
+              o.id as orderId,
+
+              srt.id as specialRequestId,
+              srt.code as specialRequestCode,
+              srt.label as specialRequestLabel
+
+          FROM Work w
+          JOIN w.orders o
+
+          JOIN OrderSpecialRequest osr
+              ON osr.order.id = o.id
+
+          JOIN osr.specialRequestType srt
+
+          WHERE w.id = :workId
+      """)
+  List<OrderSpecialRequestProjection> findSpecialRequestsByWorkId(
       @Param("workId") Long workId);
 
   @Query("""
@@ -216,7 +246,7 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               g.phone as phone,
 
               a.status as status,
-              a.rejectionReason as rejectionReason,
+              a.note as note,
               a.isCalendarInvitation as isCalendarInvitation,
               a.role as role
 

@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,9 +18,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.dto.AssignmentRequest;
+import com.example.demo.dto.AssignmentResponse;
 import com.example.demo.dto.GuideResponse;
 import com.example.demo.dto.OrderInfoResponse;
+import com.example.demo.dto.OrderSpecialRequestProjection;
 import com.example.demo.dto.ServiceInfoResponse;
+import com.example.demo.dto.SpecialRequestTypeResponse;
 import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkGuestSummaryProjection;
 import com.example.demo.dto.WorkGuideDetailProjection;
@@ -27,8 +32,11 @@ import com.example.demo.dto.WorkGuideProjection;
 import com.example.demo.dto.WorkListProjection;
 import com.example.demo.dto.WorkListResponse;
 import com.example.demo.dto.WorkOrderListProjection;
+import com.example.demo.dto.WorkOrderListResponse;
 import com.example.demo.dto.WorkOrderProjection;
+import com.example.demo.entity.Assignment;
 import com.example.demo.entity.Work;
+import com.example.demo.repository.AssignmentRepository;
 import com.example.demo.repository.WorkRepository;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class WorkService {
   private final WorkRepository workRepository;
+  private final AssignmentRepository assignmentRepository;
 
   public Page<WorkListResponse> findAll(Pageable pageable) {
 
@@ -181,19 +190,93 @@ public class WorkService {
     .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
   }
 
-  public List<WorkOrderListProjection> getWorkOrderListByWorkId(Long workId) {
-    List<WorkOrderListProjection> orders = workRepository.findOrdersByWorkId(workId);
+  public List<WorkOrderListResponse> getWorkOrderListByWorkId(Long workId, String status) {
+    List<WorkOrderListProjection> orders = workRepository.findOrdersByWorkId(workId, status);
     if (orders == null || orders.isEmpty()) {
       throw new RuntimeException("Work order not found for work id: " + workId);
     }
-    return orders;
+    List<OrderSpecialRequestProjection> specialRequests = workRepository.findSpecialRequestsByWorkId(workId);
+
+    Map<Long, List<SpecialRequestTypeResponse>> specialRequestMap = specialRequests.stream()
+        .collect(Collectors.groupingBy(
+            OrderSpecialRequestProjection::getOrderId,
+            Collectors.mapping(
+                item -> {
+                  SpecialRequestTypeResponse dto = new SpecialRequestTypeResponse();
+                  dto.setId(item.getSpecialRequestId());
+                  dto.setCode(item.getSpecialRequestCode());
+                  dto.setLabel(item.getSpecialRequestLabel());
+                  return dto;
+                },
+                Collectors.toList())));
+
+    return orders.stream()
+        .map(order -> WorkOrderListResponse.builder()
+            .orderId(order.getOrderId())
+            .reseller(order.getReseller())
+            .originalAgent(order.getOriginalAgent())
+            .ref1(order.getRef1())
+            .adultCount(order.getAdultCount())
+            .childCount(order.getChildCount())
+            .totalFeeAmount(order.getTotalFeeAmount())
+            .status(order.getStatus())
+            .specialRequests(
+                specialRequestMap.getOrDefault(
+                    order.getOrderId(),
+                    Collections.emptyList()))
+            .build())
+        .toList();
   }
 
   public List<WorkGuideDetailProjection> getWorkGuidesByWorkId(Long workId) {
     List<WorkGuideDetailProjection> guides = workRepository.findGuidesByWorkId(workId);
-    if (guides == null || guides.isEmpty()) {
-      throw new RuntimeException("Work guides not found for work id: " + workId);
-    }
     return guides;
   }
+
+  public AssignmentResponse createAssignment(
+        AssignmentRequest request) {
+
+    boolean existed =
+            assignmentRepository
+                    .existsByWorkIdAndGuideIdAndDeletedAtIsNull(
+                            request.getWorkId(),
+                            request.getGuideId());
+
+    if (existed) {
+        throw new RuntimeException(
+                "Guide already assigned to this work");
+    }
+
+    Assignment assignment = new Assignment();
+
+    assignment.setWorkId(request.getWorkId());
+    assignment.setGuideId(request.getGuideId());
+
+    assignment.setStatus(request.getStatus());
+
+    assignment.setRole(request.getRole());
+
+    assignment.setNote(request.getNote());
+
+    assignment.setIsCalendarInvitation(
+            Boolean.TRUE.equals(
+                    request.getIsCalendarInvitation()));
+
+    assignment.setCreatedAt(LocalDateTime.now());
+    assignment.setUpdatedAt(LocalDateTime.now());
+
+    Assignment saved =
+            assignmentRepository.save(assignment);
+
+    return AssignmentResponse.builder()
+            .id(saved.getId())
+            .workId(saved.getWorkId())
+            .guideId(saved.getGuideId())
+            .status(saved.getStatus())
+            .role(saved.getRole())
+            .note(saved.getNote())
+            .isCalendarInvitation(
+                    saved.getIsCalendarInvitation())
+            .build();
+}
 }

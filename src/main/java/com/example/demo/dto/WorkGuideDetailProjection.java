@@ -9,7 +9,7 @@ public interface WorkGuideDetailProjection {
 
   String getStatus();
 
-  String getRejectionReason();
+  String getNote();
 
   Boolean getIsCalendarInvitation();
 }

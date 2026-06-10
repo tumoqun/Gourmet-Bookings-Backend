@@ -37,6 +37,7 @@ ALTER TABLE receipts ADD COLUMN tax DECIMAL(12, 2);
 ALTER TABLE guides ADD COLUMN avatar VARCHAR(255);
 ALTER TABLE assignments ADD COLUMN is_calendar_invitation BOOLEAN DEFAULT FALSE;
 ALTER TABLE assignments ADD COLUMN role VARCHAR(50);
+ALTER TABLE assignments ADD COLUMN note VARCHAR(255);
 
 -- 7. Add field status, added_by to itinerary_stops
 ALTER TABLE itinerary_stops ADD COLUMN status VARCHAR(50);
