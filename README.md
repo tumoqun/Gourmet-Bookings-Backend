@@ -25,6 +25,21 @@ Spring Boot backend application for the Gourmet Bookings order management system
 
 3. The application will automatically create the database schema on first startup using the migration script.
 
+## Dev test accounts (local)
+
+After migration `V9__auth_and_rbac.sql`, these accounts are available for manual QA. **Dev only** — do not use in production.
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@gourmetbookings.com` | `Gourmet123!` |
+| Admin | `ops.admin@gourmetbookings.com` | `Gourmet123!` |
+| Agent | `agent@gourmetbookings.com` | `Gourmet123!` |
+| Agent | `agent2@gourmetbookings.com` | `Gourmet123!` |
+| Guide | `sophia.taylor@guides.com` | `Gourmet123!` |
+| Guide | `emily.j@guides.com` | `Gourmet123!` |
+
+Login: `POST /api/auth/login` with `{ "email", "password" }`. Use the returned JWT as `Authorization: Bearer <token>` on all other `/api/**` routes.
+
 ## Getting Started
 
 1. Navigate to the project directory:

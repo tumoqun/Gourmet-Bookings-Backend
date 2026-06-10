@@ -1,0 +1,52 @@
+package com.example.demo.controller;
+
+import com.example.demo.dto.GuideAssignmentResponse;
+import com.example.demo.service.AssignmentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/guide")
+@RequiredArgsConstructor
+public class GuidePortalController {
+
+    private final AssignmentService assignmentService;
+
+    @GetMapping("/assignments")
+    @PreAuthorize("hasAuthority('GUIDE_TOURS_READ')")
+    public ResponseEntity<List<GuideAssignmentResponse>> listAssignments() {
+        return ResponseEntity.ok(assignmentService.listAssignmentsForCurrentUser());
+    }
+
+    @PostMapping("/assignments/{id}/accept")
+    @PreAuthorize("hasAuthority('GUIDE_ASSIGNMENT_RESPOND')")
+    public ResponseEntity<GuideAssignmentResponse> acceptAssignment(@PathVariable Long id) {
+        return ResponseEntity.ok(assignmentService.acceptAssignment(id));
+    }
+
+    @PostMapping("/assignments/{id}/reject")
+    @PreAuthorize("hasAuthority('GUIDE_ASSIGNMENT_RESPOND')")
+    public ResponseEntity<GuideAssignmentResponse> rejectAssignment(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : null;
+        return ResponseEntity.ok(assignmentService.rejectAssignment(id, reason));
+    }
+
+    @PostMapping("/assignments/{id}/start-work")
+    @PreAuthorize("hasAuthority('GUIDE_WORK_LIFECYCLE')")
+    public ResponseEntity<GuideAssignmentResponse> startWork(@PathVariable Long id) {
+        return ResponseEntity.ok(assignmentService.startWork(id));
+    }
+
+    @PostMapping("/assignments/{id}/end-work")
+    @PreAuthorize("hasAuthority('GUIDE_WORK_LIFECYCLE')")
+    public ResponseEntity<GuideAssignmentResponse> endWork(@PathVariable Long id) {
+        return ResponseEntity.ok(assignmentService.endWork(id));
+    }
+}

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.demo.entity.Guide;
@@ -15,6 +16,7 @@ import com.example.demo.service.GuideService;
 @RequestMapping("/api/guides")
 @RequiredArgsConstructor
 @Slf4j
+@PreAuthorize("hasAuthority('ASSIGNMENTS_ASSIGN')")
 public class GuideController {
   private final GuideService guideService;
 

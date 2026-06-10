@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.OfferCreateRequest;
 import com.example.demo.dto.OrderCreateRequest;
 import com.example.demo.dto.OrderAdditionalServiceRequest;
 import com.example.demo.dto.OrderServiceRequest;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -33,8 +35,11 @@ import java.util.Collections;
 @Transactional
 public class OrderService {
     private static final String STATUS_REQUESTED = "REQUESTED";
+    private static final String STATUS_TENTATIVE = "TENTATIVE";
+    private static final String STATUS_OFFERED = "OFFERED";
     private static final String STATUS_CONFIRMED = "CONFIRMED";
     private static final String STATUS_CANCELLED = "CANCELLED";
+    private static final BigDecimal TAX_RATE = new BigDecimal("0.08");
 
     private final OrderRepository orderRepository;
     private final OrderServiceRepository orderServiceRepository;
@@ -288,7 +293,7 @@ public class OrderService {
         }
 
         if (Boolean.TRUE.equals(savedOrder.getIsPrivate())) {
-            createDedicatedWork(savedOrder);
+            ensureWorkForOrder(savedOrder);
         }
 
         log.info("Created order with ID: {}", savedOrder.getId());
@@ -424,26 +429,63 @@ public class OrderService {
         Order order = orderRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
-        OrderStatus confirmedStatus = orderStatusRepository.findByCode(STATUS_CONFIRMED)
-            .orElseThrow(() -> new RuntimeException("Confirmed status not found"));
-
-        OrderStatusHistory history = new OrderStatusHistory();
-        history.setOrder(order);
-        history.setFromStatus(order.getStatus());
-        history.setToStatus(confirmedStatus);
-        history.setChangedByUser(order.getCreatedByUser());
-        history.setCreatedAt(LocalDateTime.now());
-
-        order.setStatus(confirmedStatus);
-        order.setSubmittedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-
-        orderRepository.save(order);
+        Order confirmed = transitionToConfirmed(order, "Order submitted");
+        if (orderFinancialLineRepository.findByOrderId(confirmed.getId()).isEmpty()) {
+            createFinancialLines(confirmed);
+        }
         log.info("Submitted order with ID: {}", id);
+        return confirmed;
+    }
 
-        createFinancialLines(order);
+    public Order sendOffer(Long id, OfferCreateRequest request) {
+        Order order = orderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
-        return order;
+        if (order.getDeletedAt() != null) {
+            throw new RuntimeException("Cannot send offer for a deleted order");
+        }
+
+        String currentStatus = order.getStatus() != null ? order.getStatus().getCode() : "";
+        if (!STATUS_REQUESTED.equals(currentStatus) && !STATUS_TENTATIVE.equals(currentStatus)) {
+            throw new RuntimeException("Order cannot receive an offer in status: " + currentStatus);
+        }
+
+        updatePrimaryOrderService(order, request);
+        applyOfferPricing(order, request);
+
+        boolean hostConfirmationRequired = Boolean.TRUE.equals(request.getHostConfirmationRequired());
+        if (hostConfirmationRequired) {
+            OrderStatus offeredStatus = orderStatusRepository.findByCode(STATUS_OFFERED)
+                .orElseThrow(() -> new RuntimeException("Offered status not found"));
+            order.setStatus(offeredStatus);
+            order.setUpdatedAt(LocalDateTime.now());
+            orderRepository.save(order);
+            log.info("Sent offer for order ID: {} (status OFFERED)", id);
+        } else {
+            transitionToConfirmed(order, buildOfferHistoryNote(request, false));
+            log.info("Confirmed offer for order ID: {} (status CONFIRMED)", id);
+        }
+
+        return orderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+    }
+
+    public Order confirmOrder(Long id) {
+        Order order = orderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+
+        if (order.getDeletedAt() != null) {
+            throw new RuntimeException("Cannot confirm a deleted order");
+        }
+
+        String currentStatus = order.getStatus() != null ? order.getStatus().getCode() : "";
+        if (!STATUS_OFFERED.equals(currentStatus)) {
+            throw new RuntimeException("Only offered orders can be confirmed. Current status: " + currentStatus);
+        }
+
+        Order confirmed = transitionToConfirmed(order, "Host confirmed offer");
+        log.info("Confirmed offered order ID: {}", id);
+        return confirmed;
     }
 
     public Order cancelOrder(Long id, String note) {
@@ -490,25 +532,175 @@ public class OrderService {
         }
     }
 
-    private void createDedicatedWork(Order order) {
+    private Order transitionToConfirmed(Order order, String note) {
+        OrderStatus confirmedStatus = orderStatusRepository.findByCode(STATUS_CONFIRMED)
+            .orElseThrow(() -> new RuntimeException("Confirmed status not found"));
+
+        order.setStatus(confirmedStatus);
+        order.setSubmittedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        Order saved = orderRepository.save(order);
+        ensureWorkForOrder(saved);
+        log.debug("Order {} transitioned to CONFIRMED: {}", saved.getId(), note);
+        return saved;
+    }
+
+    private void ensureWorkForOrder(Order order) {
+        if (!workRepository.findByOrdersIdAndDeletedAtIsNull(order.getId()).isEmpty()) {
+            return;
+        }
+
         Work work = new Work();
         work.getOrders().add(order);
         work.setWorkNumber("WRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        
+
         List<com.example.demo.entity.OrderService> services = findServicesByOrderId(order.getId());
         if (!services.isEmpty()) {
             com.example.demo.entity.OrderService firstService = services.get(0);
             work.setTourDate(firstService.getTargetDate());
             work.setTourStartTime(firstService.getStartTime());
-            
-            if (firstService.getService() != null && firstService.getService().getDurationMinutes() != null && firstService.getStartTime() != null) {
-                work.setTourEndTime(firstService.getStartTime().plusMinutes(firstService.getService().getDurationMinutes()));
+
+            if (firstService.getService() != null
+                    && firstService.getService().getDurationMinutes() != null
+                    && firstService.getStartTime() != null) {
+                work.setTourEndTime(firstService.getStartTime()
+                    .plusMinutes(firstService.getService().getDurationMinutes()));
             }
         } else {
             work.setTourDate(java.time.LocalDate.now());
         }
-        
+
         workRepository.save(work);
-        log.info("Created dedicated private Work for Order ID: {}", order.getId());
+        log.info("Created Work for Order ID: {}", order.getId());
+    }
+
+    private void updatePrimaryOrderService(Order order, OfferCreateRequest request) {
+        List<com.example.demo.entity.OrderService> services = findServicesByOrderId(order.getId());
+        if (services.isEmpty()) {
+            return;
+        }
+
+        com.example.demo.entity.OrderService orderService = services.get(0);
+
+        if (request.getServiceId() != null) {
+            com.example.demo.entity.Service service = serviceRepository.findById(request.getServiceId())
+                .orElseThrow(() -> new RuntimeException("Service not found with id: " + request.getServiceId()));
+
+            if (!service.getId().equals(orderService.getService().getId())) {
+                orderService.setOriginalServiceId(orderService.getService().getId());
+                orderService.setOriginalServiceNameSnapshot(orderService.getServiceNameSnapshot());
+                orderService.setIsAdminModified(true);
+            }
+
+            orderService.setService(service);
+            orderService.setServiceNameSnapshot(service.getName());
+            orderService.setArea(service.getArea());
+            orderService.setServiceType(service.getServiceType());
+        }
+
+        if (request.getTargetDate() != null) {
+            orderService.setTargetDate(request.getTargetDate());
+        }
+        if (request.getStartTime() != null) {
+            orderService.setStartTime(request.getStartTime());
+        }
+
+        orderServiceRepository.save(orderService);
+    }
+
+    private void applyOfferPricing(Order order, OfferCreateRequest request) {
+        BigDecimal netPrice = nz(request.getNetPrice());
+        BigDecimal discountPercent = nz(request.getDiscountPercent());
+        BigDecimal discountAmount = nz(request.getDiscountAmount());
+        BigDecimal puDoFee = nz(request.getPuDoFee());
+        BigDecimal commissionPercent = nz(request.getCommissionPercent());
+        BigDecimal commissionAmount = nz(request.getCommissionAmount());
+
+        BigDecimal calculatedDiscount = discountAmount;
+        if (discountPercent.compareTo(BigDecimal.ZERO) > 0) {
+            calculatedDiscount = netPrice.multiply(discountPercent)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal discountedNet = netPrice.subtract(calculatedDiscount).max(BigDecimal.ZERO);
+
+        BigDecimal calculatedCommission = commissionAmount;
+        if (commissionPercent.compareTo(BigDecimal.ZERO) > 0) {
+            calculatedCommission = discountedNet.multiply(commissionPercent)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal subtotal = discountedNet.add(puDoFee);
+        BigDecimal tax = subtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = subtotal.add(tax);
+
+        if (order.getCurrencyCode() == null || order.getCurrencyCode().isBlank()) {
+            order.setCurrencyCode("JPY");
+        }
+        order.setTotalFeeAmount(total);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        saveOfferFinancialLines(order, netPrice, calculatedDiscount, puDoFee, calculatedCommission, tax, total);
+    }
+
+    private void saveOfferFinancialLines(
+            Order order,
+            BigDecimal netPrice,
+            BigDecimal discount,
+            BigDecimal puDoFee,
+            BigDecimal commission,
+            BigDecimal tax,
+            BigDecimal total) {
+        List<OrderFinancialLine> existing = orderFinancialLineRepository.findByOrderId(order.getId());
+        orderFinancialLineRepository.deleteAll(existing);
+
+        String currency = order.getCurrencyCode();
+        saveFinancialLine(order, "NET_PRICE", "Net Price", netPrice, null, currency);
+        if (discount.compareTo(BigDecimal.ZERO) > 0) {
+            saveFinancialLine(order, "DISCOUNT", "Discount", discount, null, currency);
+        }
+        if (puDoFee.compareTo(BigDecimal.ZERO) > 0) {
+            saveFinancialLine(order, "PU_DO_FEE", "PU/DO Fee", puDoFee, null, currency);
+        }
+        if (commission.compareTo(BigDecimal.ZERO) > 0) {
+            saveFinancialLine(order, "COMMISSION", "Commission", commission, null, currency);
+        }
+        if (tax.compareTo(BigDecimal.ZERO) > 0) {
+            saveFinancialLine(order, "TAX", "Estimated Tax", tax, tax, currency);
+        }
+        saveFinancialLine(order, "TOTAL", "Total Amount", total, tax, currency);
+    }
+
+    private void saveFinancialLine(
+            Order order,
+            String lineType,
+            String description,
+            BigDecimal amount,
+            BigDecimal taxAmount,
+            String currency) {
+        OrderFinancialLine line = new OrderFinancialLine();
+        line.setOrder(order);
+        line.setLineType(lineType);
+        line.setDescription(description);
+        line.setAmount(amount);
+        line.setTaxAmount(taxAmount);
+        line.setCurrencyCode(currency);
+        line.setIsTaxIncluded(false);
+        orderFinancialLineRepository.save(line);
+    }
+
+    private String buildOfferHistoryNote(OfferCreateRequest request, boolean hostConfirmationRequired) {
+        StringBuilder note = new StringBuilder(hostConfirmationRequired
+            ? "Offer sent — host confirmation required"
+            : "Offer confirmed");
+        if (request.getPricingNotes() != null && !request.getPricingNotes().isBlank()) {
+            note.append(": ").append(request.getPricingNotes().trim());
+        }
+        return note.toString();
+    }
+
+    private BigDecimal nz(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

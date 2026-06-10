@@ -1,9 +1,11 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -28,4 +30,17 @@ public class User {
     
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    @Column(name = "password_hash", nullable = false, length = 255)
+    private String passwordHash;
+
+    @Column(name = "guide_id")
+    private Long guideId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guide_id", insertable = false, updatable = false)
+    private Guide guide;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 }
