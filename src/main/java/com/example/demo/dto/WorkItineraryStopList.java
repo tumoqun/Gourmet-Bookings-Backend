@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public interface WorkItineraryStopList {
@@ -28,4 +29,6 @@ public interface WorkItineraryStopList {
   String getStatus();
 
   String getAddedBy();
+
+  LocalDateTime getCreatedAt();
 }

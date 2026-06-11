@@ -23,4 +23,15 @@ public class AssignmentController {
     return ResponseEntity.ok(
         workService.createAssignment(request));
   }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<AssignmentResponse> updateAssignment(
+      @PathVariable Long id,
+      @RequestBody AssignmentUpdateRequest request) {
+
+    request.setId(id);
+
+    return ResponseEntity.ok(
+        workService.updateAssignment(request));
+  }
 }

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.AssignmentRequest;
 import com.example.demo.dto.AssignmentResponse;
+import com.example.demo.dto.AssignmentUpdateRequest;
 import com.example.demo.dto.GuideResponse;
 import com.example.demo.dto.OrderInfoResponse;
 import com.example.demo.dto.OrderSpecialRequestProjection;
@@ -187,7 +188,7 @@ public class WorkService {
 
   public WorkDetailProjection getWorkById(Long id) {
     return workRepository.findWorkDetailById(id)
-    .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
+        .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
   }
 
   public List<WorkOrderListResponse> getWorkOrderListByWorkId(Long workId, String status) {
@@ -234,17 +235,16 @@ public class WorkService {
   }
 
   public AssignmentResponse createAssignment(
-        AssignmentRequest request) {
+      AssignmentRequest request) {
 
-    boolean existed =
-            assignmentRepository
-                    .existsByWorkIdAndGuideIdAndDeletedAtIsNull(
-                            request.getWorkId(),
-                            request.getGuideId());
+    boolean existed = assignmentRepository
+        .existsByWorkIdAndGuideIdAndDeletedAtIsNull(
+            request.getWorkId(),
+            request.getGuideId());
 
     if (existed) {
-        throw new RuntimeException(
-                "Guide already assigned to this work");
+      throw new RuntimeException(
+          "Guide already assigned to this work");
     }
 
     Assignment assignment = new Assignment();
@@ -259,24 +259,83 @@ public class WorkService {
     assignment.setNote(request.getNote());
 
     assignment.setIsCalendarInvitation(
-            Boolean.TRUE.equals(
-                    request.getIsCalendarInvitation()));
+        Boolean.TRUE.equals(
+            request.getIsCalendarInvitation()));
 
     assignment.setCreatedAt(LocalDateTime.now());
     assignment.setUpdatedAt(LocalDateTime.now());
 
-    Assignment saved =
-            assignmentRepository.save(assignment);
+    Assignment saved = assignmentRepository.save(assignment);
 
     return AssignmentResponse.builder()
-            .id(saved.getId())
-            .workId(saved.getWorkId())
-            .guideId(saved.getGuideId())
-            .status(saved.getStatus())
-            .role(saved.getRole())
-            .note(saved.getNote())
-            .isCalendarInvitation(
-                    saved.getIsCalendarInvitation())
-            .build();
-}
+        .id(saved.getId())
+        .workId(saved.getWorkId())
+        .guideId(saved.getGuideId())
+        .status(saved.getStatus())
+        .role(saved.getRole())
+        .note(saved.getNote())
+        .isCalendarInvitation(
+            saved.getIsCalendarInvitation())
+        .build();
+  }
+
+  public AssignmentResponse updateAssignment(
+      AssignmentUpdateRequest request) {
+
+    Assignment assignment = assignmentRepository
+        .findById(request.getId())
+        .orElseThrow(() -> new RuntimeException(
+            "Assignment not found: "
+                + request.getId()));
+
+    if (request.getStatus() != null) {
+      assignment.setStatus(request.getStatus());
+
+      switch (request.getStatus().toLowerCase()) {
+
+        case "accepted":
+          assignment.setAcceptedAt(LocalDateTime.now());
+          break;
+
+        case "rejected":
+          assignment.setRejectedAt(LocalDateTime.now());
+          assignment.setRejectionReason(
+              request.getRejectionReason());
+          break;
+
+        case "closed":
+          assignment.setClosedAt(LocalDateTime.now());
+          break;
+      }
+    }
+
+    if (request.getRole() != null) {
+      assignment.setRole(request.getRole());
+    }
+
+    if (request.getNote() != null) {
+      assignment.setNote(request.getNote());
+    }
+
+    if (request.getIsCalendarInvitation() != null) {
+      assignment.setIsCalendarInvitation(
+          request.getIsCalendarInvitation());
+    }
+
+    assignment.setUpdatedAt(LocalDateTime.now());
+
+    Assignment saved = assignmentRepository.save(assignment);
+
+    return AssignmentResponse.builder()
+        .id(saved.getId())
+        .workId(saved.getWorkId())
+        .guideId(saved.getGuideId())
+        .status(saved.getStatus())
+        .role(saved.getRole())
+        .note(saved.getNote())
+        .rejectionReason(saved.getRejectionReason())
+        .isCalendarInvitation(
+            saved.getIsCalendarInvitation())
+        .build();
+  }
 }

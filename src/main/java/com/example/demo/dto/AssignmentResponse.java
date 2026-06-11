@@ -1,7 +1,5 @@
 package com.example.demo.dto;
 
-import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +24,5 @@ public class AssignmentResponse {
 
   private Boolean isCalendarInvitation;
 
-  private LocalDateTime tourStartedAt;
-
-  private LocalDateTime tourEndedAt;
+  private String rejectionReason;
 }

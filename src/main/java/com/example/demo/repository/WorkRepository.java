@@ -245,10 +245,13 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               g.fullName as name,
               g.phone as phone,
 
+              a.id as id,
+              a.guideId as guideId,
               a.status as status,
               a.note as note,
               a.isCalendarInvitation as isCalendarInvitation,
-              a.role as role
+              a.role as role,
+              a.rejectionReason as rejectionReason
 
           FROM Assignment a
           JOIN a.guide g
