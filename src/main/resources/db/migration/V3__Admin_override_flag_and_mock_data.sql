@@ -121,7 +121,7 @@ INSERT INTO orders (
     '2025-01-15 09:00:00', NULL
 ),
 (
-    -- Row 4: Deano Japan | Elena Dyan | Pending Offer — admin modified service
+    -- Row 4: Deano Japan | Elena Dyan | Offered — admin modified service
     'ORD-2025-0003', 3, 'AGENT', FALSE,
     1, 'Alexander Pierce',
     4, 4, 'elena.dyan@deanojapan.com',
@@ -202,8 +202,8 @@ INSERT INTO order_services (
 INSERT INTO order_additional_services (
     order_id, kind, is_enabled, location, service_type_id, suggested_time, fee_amount, currency_code
 ) VALUES
--- Row 2: Dropoff at OC (5:00PM/OC)
-(2, 'DROPOFF', TRUE, 'OC', 4, '17:00:00', 0.00, 'JPY'),
+-- Row 2: Dropoff at OC (5:00PM/-)
+(2, 'DROPOFF', TRUE, '-', 4, '17:00:00', 0.00, 'JPY'),
 -- Row 3: Pickup at 4PM
 (3, 'PICKUP', TRUE, NULL, 4, '16:00:00', 0.00, 'JPY');
 
@@ -229,7 +229,7 @@ INSERT INTO order_status_history (order_id, status_id, changed_by_id, changed_by
 (2, 4, 1, 'Alexander Pierce', 'Order confirmed - service changed by admin'),
 (3, 1, 1, 'Alexander Pierce', 'Order requested'),
 (4, 1, 1, 'Alexander Pierce', 'Order requested'),
-(4, 3, 1, 'Alexander Pierce', 'Pending offer sent'),
+(4, 3, 1, 'Alexander Pierce', 'Offered'),
 (5, 1, 1, 'Alexander Pierce', 'Order requested'),
 (5, 8, 1, 'Alexander Pierce', 'Order cancelled by customer');
 

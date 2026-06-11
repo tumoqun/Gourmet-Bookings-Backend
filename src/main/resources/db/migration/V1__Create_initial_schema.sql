@@ -431,7 +431,7 @@ INSERT INTO special_request_types (code, label) VALUES
 INSERT INTO order_statuses (code, label) VALUES 
 ('REQUESTED', 'Requested'),
 ('TENTATIVE', 'Tentative'),
-('PENDING_OFFER', 'Pending Offer'),
+('OFFERED', 'Offered'),
 ('CONFIRMED', 'Confirmed'),
 ('ASSIGNED', 'Assigned'),
 ('IN_PROGRESS', 'In Progress'),
