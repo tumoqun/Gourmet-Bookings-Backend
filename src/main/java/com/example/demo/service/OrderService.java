@@ -58,6 +58,7 @@ public class OrderService {
     private final com.example.demo.repository.ResellerRepository resellerRepository;
     private final com.example.demo.repository.AgentRepository agentRepository;
     private final com.example.demo.repository.ResellerContactRepository resellerContactRepository;
+    private final com.example.demo.repository.ItineraryRepository itineraryRepository;
 
     public List<Order> findAllActive() {
         return orderRepository.findAllActive();
@@ -546,7 +547,9 @@ public class OrderService {
     }
 
     private void ensureWorkForOrder(Order order) {
-        if (!workRepository.findByOrdersIdAndDeletedAtIsNull(order.getId()).isEmpty()) {
+        List<Work> existingWorks = workRepository.findByOrdersIdAndDeletedAtIsNull(order.getId());
+        if (!existingWorks.isEmpty()) {
+            ensureItineraryForWork(existingWorks.get(0));
             return;
         }
 
@@ -570,8 +573,23 @@ public class OrderService {
             work.setTourDate(java.time.LocalDate.now());
         }
 
-        workRepository.save(work);
+        Work savedWork = workRepository.save(work);
+        ensureItineraryForWork(savedWork);
         log.info("Created Work for Order ID: {}", order.getId());
+    }
+
+    private void ensureItineraryForWork(Work work) {
+        if (!itineraryRepository.findByWorkIdOrderByDayNumberAsc(work.getId()).isEmpty()) {
+            return;
+        }
+
+        Itinerary itinerary = new Itinerary();
+        itinerary.setWorkId(work.getId());
+        itinerary.setDayNumber(1);
+        itinerary.setDayTitle("Day 1");
+        itinerary.setDescription("Auto-created when order was confirmed");
+        itineraryRepository.save(itinerary);
+        log.info("Created Itinerary for Work ID: {}", work.getId());
     }
 
     private void updatePrimaryOrderService(Order order, OfferCreateRequest request) {

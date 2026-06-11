@@ -6,8 +6,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -48,10 +51,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (ExpiredJwtException ex) {
             SecurityContextHolder.clearContext();
+            writeUnauthorized(response, "Session expired. Please sign in again.");
+            return;
+        } catch (JwtException ex) {
+            SecurityContextHolder.clearContext();
+            writeUnauthorized(response, "Invalid session. Please sign in again.");
+            return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write("{\"message\":\"" + message + "\"}");
     }
 }
