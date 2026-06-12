@@ -69,4 +69,7 @@ public class Assignment {
 
     @Column(name = "role", nullable = true, length = 50)
     private String role;
+
+    @Column(name = "note", columnDefinition = "TEXT")
+    private String note;
 }

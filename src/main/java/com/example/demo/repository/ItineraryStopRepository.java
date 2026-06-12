@@ -3,6 +3,7 @@ package com.example.demo.repository;
 import com.example.demo.dto.WorkItineraryStopList;
 import com.example.demo.entity.ItineraryStop;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -27,7 +28,8 @@ public interface ItineraryStopRepository extends JpaRepository<ItineraryStop, Lo
             s.description AS description,
             s.specialNotes AS specialNotes,
             s.status AS status,
-            s.addedBy AS addedBy
+            s.addedBy AS addedBy,
+            s.createdAt AS createdAt
         FROM ItineraryStop s
         JOIN Itinerary i ON i.id = s.itineraryId
         JOIN Supplier sp ON sp.id = s.supplierId
@@ -36,5 +38,24 @@ public interface ItineraryStopRepository extends JpaRepository<ItineraryStop, Lo
         ORDER BY s.stopSequence
     """)
     List<WorkItineraryStopList> findByWorkId(@Param("workId") Long workId);
+
+    @Query("""
+        SELECT COALESCE(MAX(s.stopSequence),0)
+        FROM ItineraryStop s
+        WHERE s.itineraryId = :itineraryId
+    """)
+    Integer findMaxSequenceByItineraryId(
+            @Param("itineraryId") Long itineraryId);
+
+    @Modifying
+    @Query("""
+        UPDATE ItineraryStop s
+        SET s.status = :status,
+            s.updatedAt = CURRENT_TIMESTAMP
+        WHERE s.id = :stopId
+    """)
+    int updateStatus(
+            @Param("stopId") Long stopId,
+            @Param("status") String status);
 }
 
