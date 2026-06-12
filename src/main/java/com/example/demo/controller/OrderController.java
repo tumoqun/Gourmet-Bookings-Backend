@@ -265,6 +265,7 @@ public class OrderController {
         response.setIsEnabled(oas.getIsEnabled());
         response.setLocation(oas.getLocation());
         response.setHandoffText(oas.getHandoffText());
+        response.setVehicleType(oas.getVehicleType());
         response.setSuggestedTime(oas.getSuggestedTime());
         response.setFeeAmount(oas.getFeeAmount());
         response.setCurrencyCode(oas.getCurrencyCode());
