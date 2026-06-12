@@ -34,7 +34,7 @@ INSERT INTO resellers (name, status) VALUES
     ('EXC',           'active'),   -- id=1
     ('Deano Travel',  'active'),   -- id=2
     ('Deano',         'active'),   -- id=3
-    ('Deano Japan',   'active');   -- id=4
+    ('Deano Vietnam', 'active');   -- id=4
 -- Note: "Direct Customer" orders have no reseller (reseller_id = NULL)
 
 
@@ -44,7 +44,7 @@ INSERT INTO reseller_contacts (reseller_id, name, email, is_primary) VALUES
     (1, 'James Anderson', 'james.anderson@exc.com',         TRUE),   -- id=1
     (2, 'Emily Johnson',  'emily.johnson@deanotravl.com',  TRUE),   -- id=2
     (3, 'Michael Brown',  'michael.brown@deano.com',       TRUE),   -- id=3
-    (4, 'Elena Dyan',     'elena.dyan@deanojapan.com',     TRUE);   -- id=4
+    (4, 'Elena Dyan',     'elena.dyan@deanovietnam.com',     TRUE);   -- id=4
 
 
 -- ===== 4. AGENTS =====
@@ -53,26 +53,26 @@ INSERT INTO agents (reseller_id, name, email) VALUES
     (1, 'EXC Agent 1',         'agent1@exc.com'),
     (2, 'Deano Travel Agent',  'agent@deanotravl.com'),
     (3, 'Deano Agent',         'agent@deano.com'),
-    (4, 'Deano Japan Agent',   'agent@deanojapan.com');
+    (4, 'Deano Vietnam Agent',   'agent@deanovietnam.com');
 
 
 -- ===== 5. GUIDES =====
 
 INSERT INTO guides (full_name, email, phone, is_active) VALUES
-    ('Sophia Taylor',  'sophia.taylor@guides.com',  '+81-90-1111-0001', TRUE),  -- id=1
-    ('Emily Johnson',  'emily.j@guides.com',        '+81-90-1111-0002', TRUE),  -- id=2
-    ('Jackson Brown',  'jackson.brown@guides.com',  '+81-90-1111-0003', TRUE),  -- id=3
-    ('Olivia Wilson',  'olivia.wilson@guides.com',  '+81-90-1111-0004', TRUE),  -- id=4
-    ('David Wilson',   'david.wilson@guides.com',   '+81-90-1111-0005', TRUE);  -- id=5
+    ('Sophia Taylor',  'sophia.taylor@guides.com',  '+84-90-1111-0001', TRUE),  -- id=1
+    ('Emily Johnson',  'emily.j@guides.com',        '+84-90-1111-0002', TRUE),  -- id=2
+    ('Jackson Brown',  'jackson.brown@guides.com',  '+84-90-1111-0003', TRUE),  -- id=3
+    ('Olivia Wilson',  'olivia.wilson@guides.com',  '+84-90-1111-0004', TRUE),  -- id=4
+    ('David Wilson',   'david.wilson@guides.com',   '+84-90-1111-0005', TRUE);  -- id=5
 
 
 -- ===== 6. SERVICES =====
 -- Areas (TOKYO=1) and service_types (TOUR=1) already seeded in V1
 
 INSERT INTO services (area_id, service_type_id, name, is_private_available, is_active) VALUES
-    (1, 1, 'The Tokyos',        TRUE,  TRUE),   -- id=1
-    (1, 1, 'Tokyo Undisclosed', FALSE, TRUE),   -- id=2  (admin-only service name)
-    (1, 1, 'Shinsaiku',         TRUE,  TRUE);   -- id=3
+    (1, 1, 'The Saigons',        TRUE,  TRUE),   -- id=1
+    (1, 1, 'Saigon Undisclosed', FALSE, TRUE),   -- id=2  (admin-only service name)
+    (1, 1, 'Old Quarter',         TRUE,  TRUE);   -- id=3
 
 
 -- ===== 7. ORDERS =====
@@ -95,7 +95,7 @@ INSERT INTO orders (
     1,
     'TK-DB213-1', 'ACC-JM23-2BC',
     5, 0,
-    'JPY', 90480.00,
+    'VND', 90480.00,
     '2024-12-07 09:00:00', '2024-12-07 10:00:00'
 ),
 (
@@ -104,9 +104,9 @@ INSERT INTO orders (
     1, 'Alexander Pierce',
     2, 2, 'emily.johnson@deanotravl.com',
     2,
-    'JPITAM-M-87', 'VOLLAMA-V87',
+    'VNITAM-M-87', 'VOLLAMA-V87',
     3, 1,
-    'JPY', 90036.00,
+    'VND', 90036.00,
     '2025-01-04 09:00:00', '2025-01-04 10:30:00'
 ),
 (
@@ -117,18 +117,18 @@ INSERT INTO orders (
     3,
     'NOLIRI.322', 'KANANA',
     3, 0,
-    'JPY', 5300.00,
+    'VND', 5300.00,
     '2025-01-15 09:00:00', NULL
 ),
 (
-    -- Row 4: Deano Japan | Elena Dyan | Offered — admin modified service
+    -- Row 4: Deano Vietnam | Elena Dyan | Offered — admin modified service
     'ORD-2025-0003', 3, 'AGENT', FALSE,
     1, 'Alexander Pierce',
-    4, 4, 'elena.dyan@deanojapan.com',
+    4, 4, 'elena.dyan@deanovietnam.com',
     4,
-    'JPTAM-JMX5000', 'ACYW-JMX5000',
+    'VNTAM-JMX5000', 'ACYW-JMX5000',
     8, 0,
-    'JPY', 80038.00,
+    'VND', 80038.00,
     '2025-01-26 09:00:00', NULL
 ),
 (
@@ -139,7 +139,7 @@ INSERT INTO orders (
     NULL,
     'EPT-#1', 'EPT-#2',
     4, 0,
-    'JPY', 164722.00,
+    'VND', 164722.00,
     '2025-05-19 09:00:00', NULL
 );
 
@@ -154,42 +154,42 @@ INSERT INTO order_services (
     is_admin_modified, original_service_id, original_service_name_snapshot
 ) VALUES
 (
-    -- Row 1: The Tokyos | Private | NOT admin modified
-    1, 1, 'The Tokyos',
+    -- Row 1: The Saigons | Private | NOT admin modified
+    1, 1, 'The Saigons',
     1, 1,
     '2024-12-02', '17:30:00', 'AFTERNOON',
     TRUE,
     FALSE, NULL, NULL
 ),
 (
-    -- Row 2: Tokyo Undisclosed | Shared | ADMIN MODIFIED (highlighted in UI)
-    -- Admin changed from "The Tokyos" to "Tokyo Undisclosed"
-    2, 2, 'Tokyo Undisclosed',
+    -- Row 2: Saigon Undisclosed | Shared | ADMIN MODIFIED (highlighted in UI)
+    -- Admin changed from "The Saigons" to "Saigon Undisclosed"
+    2, 2, 'Saigon Undisclosed',
     1, 1,
     '2025-01-04', '17:00:00', 'AFTERNOON',
     FALSE,
-    TRUE, 1, 'The Tokyos'
+    TRUE, 1, 'The Saigons'
 ),
 (
-    -- Row 3: Shinsaiku | Private | ADMIN MODIFIED (highlighted in UI)
-    -- Admin changed from "The Tokyos" to "Shinsaiku"
-    3, 3, 'Shinsaiku',
+    -- Row 3: Old Quarter | Private | ADMIN MODIFIED (highlighted in UI)
+    -- Admin changed from "The Saigons" to "Old Quarter"
+    3, 3, 'Old Quarter',
     1, 1,
     '2025-01-15', '15:30:00', 'AFTERNOON',
     TRUE,
-    TRUE, 1, 'The Tokyos'
+    TRUE, 1, 'The Saigons'
 ),
 (
-    -- Row 4: Tokyo Undisclosed | Shared | ADMIN MODIFIED (highlighted in UI)
-    4, 2, 'Tokyo Undisclosed',
+    -- Row 4: Saigon Undisclosed | Shared | ADMIN MODIFIED (highlighted in UI)
+    4, 2, 'Saigon Undisclosed',
     1, 1,
     '2025-01-26', '17:00:00', 'AFTERNOON',
     FALSE,
-    TRUE, 1, 'The Tokyos'
+    TRUE, 1, 'The Saigons'
 ),
 (
-    -- Row 5: The Tokyos | Shared | NOT admin modified
-    5, 1, 'The Tokyos',
+    -- Row 5: The Saigons | Shared | NOT admin modified
+    5, 1, 'The Saigons',
     1, 1,
     '2025-05-19', '18:20:00', 'EVENING',
     FALSE,
@@ -203,9 +203,9 @@ INSERT INTO order_additional_services (
     order_id, kind, is_enabled, location, service_type_id, suggested_time, fee_amount, currency_code
 ) VALUES
 -- Row 2: Dropoff at OC (5:00PM/-)
-(2, 'DROPOFF', TRUE, '-', 4, '17:00:00', 0.00, 'JPY'),
+(2, 'DROPOFF', TRUE, '-', 4, '17:00:00', 0.00, 'VND'),
 -- Row 3: Pickup at 4PM
-(3, 'PICKUP', TRUE, NULL, 4, '16:00:00', 0.00, 'JPY');
+(3, 'PICKUP', TRUE, NULL, 4, '16:00:00', 0.00, 'VND');
 
 
 -- ===== 10. ORDER SPECIAL REQUESTS =====
@@ -243,7 +243,7 @@ INSERT INTO works (
 ) VALUES
 (1, 'WRK-2024-0001', 'completed', '2024-12-02',
  '17:30:00', '20:30:00',
- 'The Tokyos Meeting Point', 'Shinjuku Station East Exit, Tokyo');
+ 'The Saigons Meeting Point', 'Ben Thanh Market, Ho Chi Minh City');
 
 
 -- ===== 13. ASSIGNMENTS (Guide assignments) =====
@@ -255,8 +255,8 @@ INSERT INTO assignments (work_id, guide_id, status, accepted_at) VALUES
 -- ===== 14. FINANCIAL LINES =====
 
 INSERT INTO order_financial_lines (order_id, line_type, description, amount, tax_amount, currency_code, is_tax_included) VALUES
-(1, 'SERVICE_FEE', 'The Tokyos - Private Tour (5 adults)', 82254.00, 8226.00, 'JPY', TRUE),
-(2, 'SERVICE_FEE', 'Tokyo Undisclosed - Shared Tour (3 adults, 1 child)', 81851.00, 8185.00, 'JPY', TRUE),
-(3, 'SERVICE_FEE', 'Shinsaiku - Private Tour (3 adults)', 4818.00,  482.00,  'JPY', TRUE),
-(4, 'SERVICE_FEE', 'Tokyo Undisclosed - Shared Tour (8 adults)', 72762.00, 7276.00, 'JPY', TRUE),
-(5, 'SERVICE_FEE', 'The Tokyos - Shared Tour (4 adults)', 149747.00, 14975.00, 'JPY', TRUE);
+(1, 'SERVICE_FEE', 'The Saigons - Private Tour (5 adults)', 82254.00, 8226.00, 'VND', TRUE),
+(2, 'SERVICE_FEE', 'Saigon Undisclosed - Shared Tour (3 adults, 1 child)', 81851.00, 8185.00, 'VND', TRUE),
+(3, 'SERVICE_FEE', 'Old Quarter - Private Tour (3 adults)', 4818.00,  482.00,  'VND', TRUE),
+(4, 'SERVICE_FEE', 'Saigon Undisclosed - Shared Tour (8 adults)', 72762.00, 7276.00, 'VND', TRUE),
+(5, 'SERVICE_FEE', 'The Saigons - Shared Tour (4 adults)', 149747.00, 14975.00, 'VND', TRUE);

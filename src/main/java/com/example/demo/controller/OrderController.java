@@ -163,6 +163,7 @@ public class OrderController {
         ));
         response.setOrderChannel(order.getOrderChannel());
         response.setIsTentative(order.getIsTentative());
+        response.setIsPrivate(order.getIsPrivate());
         response.setCreatedByName(order.getCreatedByName());
         response.setPicEmail(order.getPicEmail());
         response.setCopyEmail(order.getCopyEmail());

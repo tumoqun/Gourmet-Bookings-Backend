@@ -668,7 +668,10 @@ public class OrderService {
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         }
 
-        BigDecimal subtotal = discountedNet.add(puDoFee);
+        BigDecimal subtotal = discountedNet.add(puDoFee).subtract(calculatedCommission);
+        if (subtotal.compareTo(BigDecimal.ZERO) < 0) {
+            subtotal = BigDecimal.ZERO;
+        }
         BigDecimal tax = subtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(tax);
 
