@@ -25,4 +25,6 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     
     @Query("SELECT a FROM Assignment a WHERE a.deletedAt IS NULL ORDER BY a.createdAt DESC")
     List<Assignment> findAllActive();
+
+    boolean existsByWorkIdAndGuideIdAndDeletedAtIsNull(Long workId, Long guideId);
 }

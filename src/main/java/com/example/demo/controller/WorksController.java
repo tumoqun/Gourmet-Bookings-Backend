@@ -24,12 +24,11 @@ public class WorksController {
   @GetMapping
   public ResponseEntity<Page<WorkListResponse>> getAll(
       Pageable pageable) {
-      
+
     return ResponseEntity.ok(
-          workService.findAll(pageable)
-    );
+        workService.findAll(pageable));
   }
-  
+
   @GetMapping("/guests")
   public ResponseEntity<WorkGuestSummaryProjection> getGuestSummary() {
     WorkGuestSummaryProjection summary = workService.getGuestSummary();
@@ -41,10 +40,12 @@ public class WorksController {
     return workService.getWorkById(id);
   }
 
-  @GetMapping("/{id}/orders")
-  public ResponseEntity<List<WorkOrderListProjection>> getWorkOrdersByWorkId(@PathVariable Long id) {
-    List<WorkOrderListProjection> orders = workService.getWorkOrderListByWorkId(id);
-    return ResponseEntity.ok(orders);
+  @GetMapping("/{workId}/orders")
+  public ResponseEntity<List<WorkOrderListResponse>> getWorkOrderListByWorkId(
+      @PathVariable Long workId, @RequestParam(required = false) String status) {
+
+    return ResponseEntity.ok(
+        workService.getWorkOrderListByWorkId(workId, status));
   }
 
   @GetMapping("/{id}/guides")
@@ -53,4 +54,3 @@ public class WorksController {
     return ResponseEntity.ok(guides);
   }
 }
-
