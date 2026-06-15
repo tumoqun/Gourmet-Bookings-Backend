@@ -143,6 +143,19 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               ) as isPrivate,
 
               (
+                  SELECT s.id
+                  FROM work_orders wo3
+                  JOIN order_services os
+                      ON os.order_id = wo3.order_id
+                  JOIN services s
+                      ON s.id = os.service_id
+                  WHERE wo3.work_id = w.id
+                    AND os.deleted_at IS NULL
+                  ORDER BY os.id
+                  LIMIT 1
+              ) as serviceId,
+
+              (
                   SELECT s.name
                   FROM work_orders wo3
                   JOIN order_services os
@@ -154,6 +167,21 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
                   ORDER BY os.id
                   LIMIT 1
               ) as serviceName,
+
+              (
+                  SELECT a.id
+                  FROM work_orders wo3
+                  JOIN order_services os
+                      ON os.order_id = wo3.order_id
+                  JOIN services s
+                      ON s.id = os.service_id
+                  JOIN areas a
+                      ON a.id = s.area_id
+                  WHERE wo3.work_id = w.id
+                    AND os.deleted_at IS NULL
+                  ORDER BY os.id
+                  LIMIT 1
+              ) as areaId,
 
               (
                   SELECT a.name

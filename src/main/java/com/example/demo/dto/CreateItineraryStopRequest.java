@@ -12,6 +12,8 @@ public class CreateItineraryStopRequest {
   private Long workId;
 
   @NotNull
+  private Long serviceId;
+
   private Long supplierId;
 
   @NotNull
@@ -24,4 +26,6 @@ public class CreateItineraryStopRequest {
   private String status;
 
   private String addedBy;
+
+  private String otherName;
 }
