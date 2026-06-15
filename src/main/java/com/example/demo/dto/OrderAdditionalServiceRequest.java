@@ -19,6 +19,7 @@ public class OrderAdditionalServiceRequest {
     private String location;
     private String handoffText;
     private Long serviceTypeId;
+    private String vehicleType;
     private Long distanceBandId;
     private LocalTime suggestedTime;
     private BigDecimal feeAmount;

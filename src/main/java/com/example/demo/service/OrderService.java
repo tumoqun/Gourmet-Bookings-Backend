@@ -338,6 +338,7 @@ public class OrderService {
             additionalService.setIsEnabled(request.getIsEnabled() == null || Boolean.TRUE.equals(request.getIsEnabled()));
             additionalService.setLocation(request.getLocation());
             additionalService.setHandoffText(request.getHandoffText());
+            additionalService.setVehicleType(request.getVehicleType());
             additionalService.setSuggestedTime(request.getSuggestedTime());
             additionalService.setFeeAmount(BigDecimal.ZERO);
             additionalService.setCurrencyCode(order.getCurrencyCode());
@@ -351,7 +352,7 @@ public class OrderService {
                 com.example.demo.entity.DistanceBand distanceBand = distanceBandRepository.findById(request.getDistanceBandId())
                     .orElseThrow(() -> new RuntimeException("Distance band not found with id: " + request.getDistanceBandId()));
                 additionalService.setDistanceBand(distanceBand);
-                BigDecimal feeAmount = calculateDistanceFee(request.getDistanceBandId());
+                BigDecimal feeAmount = calculateDistanceFee(request.getDistanceBandId(), request.getVehicleType());
                 additionalService.setFeeAmount(feeAmount);
                 additionalFeeTotal = additionalFeeTotal.add(feeAmount);
             }
@@ -379,14 +380,33 @@ public class OrderService {
         }
     }
 
-    private BigDecimal calculateDistanceFee(Long distanceBandId) {
+    private BigDecimal calculateDistanceFee(Long distanceBandId, String vehicleType) {
         if (distanceBandId == null) {
             return BigDecimal.ZERO;
         }
 
-        return distanceBandRepository.findById(distanceBandId)
+        BigDecimal baseFee = distanceBandRepository.findById(distanceBandId)
             .map(DistanceBand::getFeeAmount)
             .orElse(BigDecimal.ZERO);
+
+        if (vehicleType == null || vehicleType.isBlank()) {
+            return baseFee;
+        }
+
+        BigDecimal multiplier;
+        switch (vehicleType) {
+            case "Hired Car":
+                multiplier = BigDecimal.valueOf(1.5);
+                break;
+            case "Grabbike":
+                multiplier = BigDecimal.valueOf(0.75);
+                break;
+            default:
+                multiplier = BigDecimal.ONE;
+                break;
+        }
+
+        return baseFee.multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
     }
 
     public Order updateOrder(Long id, Order order) {
@@ -648,7 +668,10 @@ public class OrderService {
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         }
 
-        BigDecimal subtotal = discountedNet.add(puDoFee);
+        BigDecimal subtotal = discountedNet.add(puDoFee).subtract(calculatedCommission);
+        if (subtotal.compareTo(BigDecimal.ZERO) < 0) {
+            subtotal = BigDecimal.ZERO;
+        }
         BigDecimal tax = subtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(tax);
 

@@ -163,6 +163,7 @@ public class OrderController {
         ));
         response.setOrderChannel(order.getOrderChannel());
         response.setIsTentative(order.getIsTentative());
+        response.setIsPrivate(order.getIsPrivate());
         response.setCreatedByName(order.getCreatedByName());
         response.setPicEmail(order.getPicEmail());
         response.setCopyEmail(order.getCopyEmail());
@@ -265,6 +266,7 @@ public class OrderController {
         response.setIsEnabled(oas.getIsEnabled());
         response.setLocation(oas.getLocation());
         response.setHandoffText(oas.getHandoffText());
+        response.setVehicleType(oas.getVehicleType());
         response.setSuggestedTime(oas.getSuggestedTime());
         response.setFeeAmount(oas.getFeeAmount());
         response.setCurrencyCode(oas.getCurrencyCode());

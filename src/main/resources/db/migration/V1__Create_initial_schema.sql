@@ -404,13 +404,17 @@ INSERT INTO service_types (code, name) VALUES
 ('ACTIVITY', 'Activity'),
 ('TRANSPORT', 'Transportation');
 
-INSERT INTO areas (code, name) VALUES 
-('TOKYO', 'Tokyo'),
-('OSAKA', 'Osaka'),
-('KYOTO', 'Kyoto'),
-('NAGOYA', 'Nagoya'),
-('SAPPORO', 'Sapporo'),
-('FUKUOKA', 'Fukuoka');
+INSERT INTO areas (code, name) VALUES
+('HCM', 'Hồ Chí Minh'),
+('HAN', 'Hà Nội'),
+('DAN', 'Đà Nẵng'),
+('HPH', 'Hải Phòng'),
+('CTO', 'Cần Thơ'),
+('BDG', 'Bình Dương'),
+('DNA', 'Đồng Nai'),
+('HUE', 'Huế'),
+('NTR', 'Nha Trang'),
+('VTU', 'Vũng Tàu');
 
 INSERT INTO distance_bands (label, sort_order) VALUES 
 ('Within City', 1),

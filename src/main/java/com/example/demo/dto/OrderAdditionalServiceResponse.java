@@ -16,6 +16,7 @@ public class OrderAdditionalServiceResponse {
     private Boolean isEnabled;
     private String location;
     private String handoffText;
+    private String vehicleType;
     private ServiceTypeResponse serviceType;
     private DistanceBandResponse distanceBand;
     private LocalTime suggestedTime;
