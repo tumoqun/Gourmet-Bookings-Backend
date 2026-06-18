@@ -36,6 +36,7 @@ import com.example.demo.dto.WorkOrderListResponse;
 import com.example.demo.dto.WorkOrderProjection;
 import com.example.demo.dto.WorkSearchResponse;
 import com.example.demo.entity.Assignment;
+import com.example.demo.entity.Work;
 import com.example.demo.repository.AssignmentRepository;
 import com.example.demo.repository.WorkRepository;
 
@@ -335,6 +336,16 @@ public class WorkService {
 
     Assignment saved = assignmentRepository.save(assignment);
 
+    // Update work status -> offered
+    Work work = workRepository.findById(request.getWorkId())
+        .orElseThrow(() -> new RuntimeException("Work not found"));
+
+    if (!"OFFERED".equalsIgnoreCase(work.getStatus())) {
+      work.setStatus("OFFERED");
+      work.setUpdatedAt(LocalDateTime.now());
+      workRepository.save(work);
+    }
+
     return AssignmentResponse.builder()
         .id(saved.getId())
         .workId(saved.getWorkId())
@@ -360,15 +371,37 @@ public class WorkService {
       assignment.setStatus(request.getStatus());
 
       switch (request.getStatus().toLowerCase()) {
-
         case "accepted":
           assignment.setAcceptedAt(LocalDateTime.now());
+
+          // Update work status -> accepted
+          if ("accepted".equalsIgnoreCase(request.getStatus().toLowerCase())) {
+            Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                    "Work not found: "
+                        + assignment.getWorkId()));
+            work.setStatus("ACCEPTED");
+            work.setUpdatedAt(LocalDateTime.now());
+            workRepository.save(work);
+          }
           break;
 
         case "rejected":
           assignment.setRejectedAt(LocalDateTime.now());
-          assignment.setRejectionReason(
-              request.getRejectionReason());
+          assignment.setRejectionReason(request.getRejectionReason());
+
+          // Update work status -> IN_PREP
+          if ("rejected".equalsIgnoreCase(request.getStatus().toLowerCase())) {
+            Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                    "Work not found: "
+                        + assignment.getWorkId()));
+            work.setStatus("IN_PREP");
+            work.setUpdatedAt(LocalDateTime.now());
+            workRepository.save(work);
+          }
           break;
 
         case "closed":
