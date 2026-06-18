@@ -3,7 +3,7 @@
 ## Update Date: May 13, 2026
 ## Status: Complete
 
-This update brings the Gourmet Bookings database schema in alignment with the Tour Management System requirements from `TOUR_MANAGEMENT_ESTIMATION.md`.
+This update brings the TMA Tour Management database schema in alignment with the Tour Management System requirements from `TOUR_MANAGEMENT_ESTIMATION.md`.
 
 ## Changes Overview
 
