@@ -1,12 +1,16 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AssignmentListProjection;
 import com.example.demo.dto.GuideAssignmentResponse;
 import com.example.demo.service.AssignmentService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +23,11 @@ public class GuidePortalController {
 
     @GetMapping("/assignments")
     @PreAuthorize("hasAuthority('GUIDE_TOURS_READ')")
-    public ResponseEntity<List<GuideAssignmentResponse>> listAssignments() {
-        return ResponseEntity.ok(assignmentService.listAssignmentsForCurrentUser());
+    public ResponseEntity<List<AssignmentListProjection>> listAssignments(
+       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate requestedDate,
+        @RequestParam(required = false) String status
+    ) {
+        return ResponseEntity.ok(assignmentService.listAssignmentsForCurrentUser(requestedDate, status));
     }
 
     @PostMapping("/assignments/{id}/accept")

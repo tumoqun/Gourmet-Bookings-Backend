@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.AssignmentListProjection;
 import com.example.demo.dto.GuideAssignmentResponse;
 import com.example.demo.entity.Assignment;
 import com.example.demo.entity.Guide;
@@ -14,8 +15,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -28,26 +29,18 @@ public class AssignmentService {
     private final GuideRepository guideRepository;
 
     @Transactional(readOnly = true)
-    public List<GuideAssignmentResponse> listAssignmentsForCurrentUser() {
+    public List<AssignmentListProjection> listAssignmentsForCurrentUser(LocalDate requestedDate, String status) {
         AppUserDetails user = SecurityUtils.currentUser();
-        List<Assignment> assignments;
-
         if (user.isAdmin()) {
-            assignments = assignmentRepository.findAllActive();
+            return assignmentRepository.findAssignments(null, requestedDate, status);
         } else if (user.isGuide()) {
             if (user.getGuideId() == null) {
                 throw new AccessDeniedException("Guide account is not linked to a guide profile");
             }
-            assignments = assignmentRepository.findByGuideIdOrderByCreatedAtDesc(user.getGuideId());
+            return assignmentRepository.findAssignments(user.getGuideId(), requestedDate, status);
         } else {
             throw new AccessDeniedException("Access denied");
         }
-
-        return assignments.stream()
-                .filter(assignment -> assignment.getDeletedAt() == null)
-                .sorted(Comparator.comparing(Assignment::getCreatedAt).reversed())
-                .map(this::toResponse)
-                .toList();
     }
 
     public GuideAssignmentResponse acceptAssignment(Long assignmentId) {
