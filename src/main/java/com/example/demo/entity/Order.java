@@ -75,6 +75,12 @@ public class Order {
     
     @Column(name = "guest_email", length = 150)
     private String guestEmail;
+
+    @Column(name = "leader_phone", length = 50)
+    private String leaderPhone;
+
+    @Column(name = "guest_group_notes", columnDefinition = "TEXT")
+    private String guestGroupNotes;
     
     @Column(name = "adult_count")
     private Integer adultCount;

@@ -78,10 +78,10 @@ public class OrderController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ORDERS_WRITE')")
-    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order order) {
+    public ResponseEntity<OrderResponse> updateOrder(@PathVariable Long id, @RequestBody Order order) {
         try {
             Order updatedOrder = orderService.updateOrder(id, order);
-            return ResponseEntity.ok(updatedOrder);
+            return ResponseEntity.ok(toOrderResponse(updatedOrder));
         } catch (Exception e) {
             log.error("Error updating order with id: {}", id, e);
             return ResponseEntity.badRequest().build();
@@ -171,6 +171,8 @@ public class OrderController {
         response.setRef2(order.getRef2());
         response.setVoucherNumber(order.getVoucherNumber());
         response.setGuestEmail(order.getGuestEmail());
+        response.setLeaderPhone(order.getLeaderPhone());
+        response.setGuestGroupNotes(order.getGuestGroupNotes());
         response.setAdultCount(order.getAdultCount());
         response.setChildCount(order.getChildCount());
         response.setDietaryRestrictions(order.getDietaryRestrictions());

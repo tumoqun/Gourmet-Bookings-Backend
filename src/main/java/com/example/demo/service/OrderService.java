@@ -111,6 +111,8 @@ public class OrderService {
             response.setRef2(order.getRef2());
             response.setVoucherNumber(order.getVoucherNumber());
             response.setGuestEmail(order.getGuestEmail());
+            response.setLeaderPhone(order.getLeaderPhone());
+            response.setGuestGroupNotes(order.getGuestGroupNotes());
             response.setAdultCount(order.getAdultCount());
             response.setChildCount(order.getChildCount());
             response.setDietaryRestrictions(order.getDietaryRestrictions());
@@ -413,22 +415,25 @@ public class OrderService {
         Order existingOrder = orderRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
-        existingOrder.setOrderChannel(order.getOrderChannel());
-        existingOrder.setIsTentative(order.getIsTentative());
-        existingOrder.setReseller(order.getReseller());
-        existingOrder.setPicContact(order.getPicContact());
-        existingOrder.setPicEmail(order.getPicEmail());
-        existingOrder.setCopyEmail(order.getCopyEmail());
-        existingOrder.setOriginalAgent(order.getOriginalAgent());
-        existingOrder.setRef1(order.getRef1());
-        existingOrder.setRef2(order.getRef2());
-        existingOrder.setVoucherNumber(order.getVoucherNumber());
-        existingOrder.setGuestEmail(order.getGuestEmail());
-        existingOrder.setAdultCount(order.getAdultCount());
-        existingOrder.setChildCount(order.getChildCount());
-        existingOrder.setDietaryRestrictions(order.getDietaryRestrictions());
-        existingOrder.setCurrencyCode(order.getCurrencyCode());
-        existingOrder.setTotalFeeAmount(order.getTotalFeeAmount());
+        if (order.getOrderChannel() != null) existingOrder.setOrderChannel(order.getOrderChannel());
+        if (order.getIsTentative() != null) existingOrder.setIsTentative(order.getIsTentative());
+        if (order.getIsPrivate() != null) existingOrder.setIsPrivate(order.getIsPrivate());
+        if (order.getReseller() != null) existingOrder.setReseller(order.getReseller());
+        if (order.getPicContact() != null) existingOrder.setPicContact(order.getPicContact());
+        if (order.getPicEmail() != null) existingOrder.setPicEmail(order.getPicEmail());
+        if (order.getCopyEmail() != null) existingOrder.setCopyEmail(order.getCopyEmail());
+        if (order.getOriginalAgent() != null) existingOrder.setOriginalAgent(order.getOriginalAgent());
+        if (order.getRef1() != null) existingOrder.setRef1(order.getRef1());
+        if (order.getRef2() != null) existingOrder.setRef2(order.getRef2());
+        if (order.getVoucherNumber() != null) existingOrder.setVoucherNumber(order.getVoucherNumber());
+        if (order.getGuestEmail() != null) existingOrder.setGuestEmail(order.getGuestEmail());
+        if (order.getLeaderPhone() != null) existingOrder.setLeaderPhone(order.getLeaderPhone());
+        if (order.getGuestGroupNotes() != null) existingOrder.setGuestGroupNotes(order.getGuestGroupNotes());
+        if (order.getAdultCount() != null) existingOrder.setAdultCount(order.getAdultCount());
+        if (order.getChildCount() != null) existingOrder.setChildCount(order.getChildCount());
+        if (order.getDietaryRestrictions() != null) existingOrder.setDietaryRestrictions(order.getDietaryRestrictions());
+        if (order.getCurrencyCode() != null) existingOrder.setCurrencyCode(order.getCurrencyCode());
+        if (order.getTotalFeeAmount() != null) existingOrder.setTotalFeeAmount(order.getTotalFeeAmount());
         existingOrder.setUpdatedAt(LocalDateTime.now());
 
         Order updatedOrder = orderRepository.save(existingOrder);
