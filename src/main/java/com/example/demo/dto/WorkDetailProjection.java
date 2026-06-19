@@ -17,6 +17,7 @@ public interface WorkDetailProjection {
   Boolean getIsPrivate();
   Long getAreaId();
   String getAreaName();
+  Integer getServiceId();
   String getServiceName();
   String getLocationName();
   String getLocationAddress();

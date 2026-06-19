@@ -8,14 +8,13 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.AssignmentRequest;
@@ -27,7 +26,7 @@ import com.example.demo.dto.OrderSpecialRequestProjection;
 import com.example.demo.dto.ServiceInfoResponse;
 import com.example.demo.dto.SpecialRequestTypeResponse;
 import com.example.demo.dto.WorkDetailProjection;
-import com.example.demo.dto.WorkGuestSummaryProjection;
+import com.example.demo.dto.WorkFilter;
 import com.example.demo.dto.WorkGuideDetailProjection;
 import com.example.demo.dto.WorkGuideProjection;
 import com.example.demo.dto.WorkListProjection;
@@ -35,6 +34,7 @@ import com.example.demo.dto.WorkListResponse;
 import com.example.demo.dto.WorkOrderListProjection;
 import com.example.demo.dto.WorkOrderListResponse;
 import com.example.demo.dto.WorkOrderProjection;
+import com.example.demo.dto.WorkSearchResponse;
 import com.example.demo.entity.Assignment;
 import com.example.demo.entity.Work;
 import com.example.demo.repository.AssignmentRepository;
@@ -52,12 +52,63 @@ public class WorkService {
   private final WorkRepository workRepository;
   private final AssignmentRepository assignmentRepository;
 
-  public Page<WorkListResponse> findAll(Pageable pageable) {
+  public WorkSearchResponse findAll(
+    WorkFilter filter,
+    Pageable pageable) {
 
-    Page<WorkListProjection> workPage = workRepository.findWorkPage(pageable);
+    filter.setPrivateFilter(buildPrivateFilter(filter));
+    List<Long> allWorkIds;
+    if (filter.getTourDate() != null) {
+      allWorkIds = workRepository.findAllWorkIdsByTourDate(
+          filter,
+          filter.getTourDate());
+    } else {
+      allWorkIds = workRepository.findAllWorkIds(filter);
+    }
+
+    long totalAdultCount = 0;
+    long totalChildCount = 0;
+  
+    if (!allWorkIds.isEmpty()) {
+      List<WorkOrderProjection> allRows = workRepository.findOrdersByWorkIds(allWorkIds);
+
+      Map<Long, WorkOrderProjection> uniqueOrders = allRows.stream()
+          .collect(Collectors.toMap(
+              WorkOrderProjection::getOrderId,
+              Function.identity(),
+              (first, second) -> first));
+      totalAdultCount = uniqueOrders.values()
+          .stream()
+          .mapToLong(o -> Optional.ofNullable(o.getAdultCount())
+              .orElse(0))
+          .sum();
+      totalChildCount = uniqueOrders.values()
+          .stream()
+          .mapToLong(o -> Optional.ofNullable(o.getChildCount())
+              .orElse(0))
+          .sum();
+    }
+
+    Page<WorkListProjection> workPage;
+    if (filter.getTourDate() != null) {
+      workPage = workRepository.findWorkPageByTourDate(
+          filter,
+          filter.getTourDate(),
+          pageable);
+    } else {
+      workPage = workRepository.findWorkPage(filter, pageable);
+    }
 
     if (workPage.isEmpty()) {
-      return Page.empty(pageable);
+      return WorkSearchResponse.builder()
+          .content(Collections.emptyList())
+          .totalElements(0)
+          .totalPages(0)
+          .page(pageable.getPageNumber())
+          .size(pageable.getPageSize())
+          .totalAdultCount(0L)
+          .totalChildCount(0L)
+          .build();
     }
 
     List<Long> workIds = workPage.getContent()
@@ -76,7 +127,8 @@ public class WorkService {
                 Collectors.toList(),
                 guides -> {
                   WorkGuideProjection selected = guides.stream()
-                      .filter(g -> "leader".equalsIgnoreCase(g.getGuideRole()))
+                      .filter(g -> "leader".equalsIgnoreCase(
+                          g.getGuideRole()))
                       .findFirst()
                       .orElse(guides.get(0));
                   return List.of(
@@ -145,15 +197,36 @@ public class WorkService {
                           Collections.emptyMap())
                       .values()));
           dto.setGuides(
-              guideMap.get(work.getId()));
+              guideMap.getOrDefault(
+                  work.getId(),
+                  Collections.emptyList()));
           return dto;
         })
         .toList();
 
-    return new PageImpl<>(
-        content,
-        pageable,
-        workPage.getTotalElements());
+    return WorkSearchResponse.builder()
+        .content(content)
+        .page(workPage.getNumber())
+        .size(workPage.getSize())
+        .totalElements(workPage.getTotalElements())
+        .totalPages(workPage.getTotalPages())
+        .totalAdultCount(totalAdultCount)
+        .totalChildCount(totalChildCount)
+        .build();
+  }
+
+  private Boolean buildPrivateFilter(WorkFilter filter) {
+    if (Boolean.TRUE.equals(filter.getIsPrivate())
+        && Boolean.TRUE.equals(filter.getIsShared())) {
+      return null;
+    }
+    if (Boolean.TRUE.equals(filter.getIsPrivate())) {
+      return true;
+    }
+    if (Boolean.TRUE.equals(filter.getIsShared())) {
+      return false;
+    }
+    return null;
   }
 
   private OrderInfoResponse buildOrder(
@@ -180,10 +253,6 @@ public class WorkService {
     dto.setServices(new ArrayList<>());
 
     return dto;
-  }
-
-  public WorkGuestSummaryProjection getGuestSummary() {
-    return workRepository.getGuestSummary();
   }
 
   public WorkDetailProjection getWorkById(Long id) {
@@ -267,6 +336,16 @@ public class WorkService {
 
     Assignment saved = assignmentRepository.save(assignment);
 
+    // Update work status -> offered
+    Work work = workRepository.findById(request.getWorkId())
+        .orElseThrow(() -> new RuntimeException("Work not found"));
+
+    if (!"OFFERED".equalsIgnoreCase(work.getStatus())) {
+      work.setStatus("OFFERED");
+      work.setUpdatedAt(LocalDateTime.now());
+      workRepository.save(work);
+    }
+
     return AssignmentResponse.builder()
         .id(saved.getId())
         .workId(saved.getWorkId())
@@ -292,15 +371,37 @@ public class WorkService {
       assignment.setStatus(request.getStatus());
 
       switch (request.getStatus().toLowerCase()) {
-
         case "accepted":
           assignment.setAcceptedAt(LocalDateTime.now());
+
+          // Update work status -> accepted
+          if ("accepted".equalsIgnoreCase(request.getStatus().toLowerCase())) {
+            Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                    "Work not found: "
+                        + assignment.getWorkId()));
+            work.setStatus("ACCEPTED");
+            work.setUpdatedAt(LocalDateTime.now());
+            workRepository.save(work);
+          }
           break;
 
         case "rejected":
           assignment.setRejectedAt(LocalDateTime.now());
-          assignment.setRejectionReason(
-              request.getRejectionReason());
+          assignment.setRejectionReason(request.getRejectionReason());
+
+          // Update work status -> IN_PREP
+          if ("rejected".equalsIgnoreCase(request.getStatus().toLowerCase())) {
+            Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                    "Work not found: "
+                        + assignment.getWorkId()));
+            work.setStatus("IN_PREP");
+            work.setUpdatedAt(LocalDateTime.now());
+            workRepository.save(work);
+          }
           break;
 
         case "closed":
