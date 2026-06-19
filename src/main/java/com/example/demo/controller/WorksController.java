@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,17 +21,12 @@ public class WorksController {
   private final WorkService workService;
 
   @GetMapping
-  public ResponseEntity<Page<WorkListResponse>> getAll(
+  public ResponseEntity<WorkSearchResponse> getAll(
+      @ModelAttribute WorkFilter filter,
       Pageable pageable) {
 
     return ResponseEntity.ok(
-        workService.findAll(pageable));
-  }
-
-  @GetMapping("/guests")
-  public ResponseEntity<WorkGuestSummaryProjection> getGuestSummary() {
-    WorkGuestSummaryProjection summary = workService.getGuestSummary();
-    return ResponseEntity.ok(summary);
+        workService.findAll(filter, pageable));
   }
 
   @GetMapping("/{id}")

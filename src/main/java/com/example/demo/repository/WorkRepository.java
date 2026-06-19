@@ -2,7 +2,7 @@ package com.example.demo.repository;
 
 import com.example.demo.dto.OrderSpecialRequestProjection;
 import com.example.demo.dto.WorkDetailProjection;
-import com.example.demo.dto.WorkGuestSummaryProjection;
+import com.example.demo.dto.WorkFilter;
 import com.example.demo.dto.WorkGuideDetailProjection;
 import com.example.demo.dto.WorkGuideProjection;
 import com.example.demo.dto.WorkListProjection;
@@ -31,15 +31,238 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
   List<Work> findByTourDateAndDeletedAtIsNull(LocalDate tourDate);
 
   @Query("""
-          SELECT
-              w.id as id,
-              w.workNumber as workNumber,
-              w.status as status,
-              w.tourDate as tourDate
-          FROM Work w
-          WHERE w.deletedAt IS NULL
-      """)
-  Page<WorkListProjection> findWorkPage(Pageable pageable);
+              SELECT DISTINCT
+                  w.id as id,
+                  w.workNumber as workNumber,
+                  w.status as status,
+                  w.tourDate as tourDate
+              FROM Work w
+              LEFT JOIN w.orders o
+              LEFT JOIN o.reseller r
+              LEFT JOIN o.picContact pc
+              LEFT JOIN OrderService os
+                  ON os.order.id = o.id
+                 AND os.deletedAt IS NULL
+              LEFT JOIN os.service s
+              LEFT JOIN s.area a
+              LEFT JOIN Assignment ass
+                  ON ass.workId = w.id
+                 AND ass.deletedAt IS NULL
+              LEFT JOIN ass.guide g
+              WHERE w.deletedAt IS NULL
+                AND (
+                      :#{#filter.resellerId} IS NULL
+                      OR r.id = :#{#filter.resellerId}
+                )
+                AND (
+                      :#{#filter.ref} IS NULL
+                      OR LOWER(o.ref1)
+                          LIKE LOWER(CONCAT('%', :#{#filter.ref}, '%'))
+                )
+                AND (
+                      :#{#filter.personInChargeId} IS NULL
+                      OR pc.id = :#{#filter.personInChargeId}
+                )
+                AND (
+                      :#{#filter.areaId} IS NULL
+                      OR a.id = :#{#filter.areaId}
+                )
+                AND (
+                      :#{#filter.serviceName} IS NULL
+                      OR LOWER(s.name)
+                          LIKE LOWER(CONCAT('%', :#{#filter.serviceName}, '%'))
+                )
+                AND (
+                      :#{#filter.guideName} IS NULL
+                      OR LOWER(g.fullName)
+                          LIKE LOWER(CONCAT('%', :#{#filter.guideName}, '%'))
+                )
+                AND (
+                      :#{#filter.status} IS NULL
+                      OR w.status = :#{#filter.status}
+                )
+                AND (
+                      :#{#filter.privateFilter} IS NULL
+                      OR o.isPrivate = :#{#filter.privateFilter}
+                )
+          """)
+  Page<WorkListProjection> findWorkPage(
+          @Param("filter") WorkFilter filter,
+          Pageable pageable);
+
+    @Query("""
+              SELECT DISTINCT
+                  w.id as id,
+                  w.workNumber as workNumber,
+                  w.status as status,
+                  w.tourDate as tourDate
+              FROM Work w
+              LEFT JOIN w.orders o
+              LEFT JOIN o.reseller r
+              LEFT JOIN o.picContact pc
+              LEFT JOIN OrderService os
+                  ON os.order.id = o.id
+                 AND os.deletedAt IS NULL
+              LEFT JOIN os.service s
+              LEFT JOIN s.area a
+              LEFT JOIN Assignment ass
+                  ON ass.workId = w.id
+                 AND ass.deletedAt IS NULL
+              LEFT JOIN ass.guide g
+              WHERE w.deletedAt IS NULL
+                AND w.tourDate = :tourDate
+                AND (
+                      :#{#filter.resellerId} IS NULL
+                      OR r.id = :#{#filter.resellerId}
+                )
+                AND (
+                      :#{#filter.ref} IS NULL
+                      OR LOWER(o.ref1)
+                          LIKE LOWER(CONCAT('%', :#{#filter.ref}, '%'))
+                )
+                AND (
+                      :#{#filter.personInChargeId} IS NULL
+                      OR pc.id = :#{#filter.personInChargeId}
+                )
+                AND (
+                      :#{#filter.areaId} IS NULL
+                      OR a.id = :#{#filter.areaId}
+                )
+                AND (
+                      :#{#filter.serviceName} IS NULL
+                      OR LOWER(s.name)
+                          LIKE LOWER(CONCAT('%', :#{#filter.serviceName}, '%'))
+                )
+                AND (
+                      :#{#filter.guideName} IS NULL
+                      OR LOWER(g.fullName)
+                          LIKE LOWER(CONCAT('%', :#{#filter.guideName}, '%'))
+                )
+                AND (
+                      :#{#filter.status} IS NULL
+                      OR w.status = :#{#filter.status}
+                )
+                AND (
+                      :#{#filter.privateFilter} IS NULL
+                      OR o.isPrivate = :#{#filter.privateFilter}
+                )
+          """)
+  Page<WorkListProjection> findWorkPageByTourDate(
+          @Param("filter") WorkFilter filter,
+          @Param("tourDate") LocalDate tourDate,
+          Pageable pageable);
+
+  @Query("""
+              SELECT DISTINCT w.id
+              FROM Work w
+              LEFT JOIN w.orders o
+              LEFT JOIN o.reseller r
+              LEFT JOIN o.picContact pc
+              LEFT JOIN OrderService os
+                  ON os.order.id = o.id
+                 AND os.deletedAt IS NULL
+              LEFT JOIN os.service s
+              LEFT JOIN s.area a
+              LEFT JOIN Assignment ass
+                  ON ass.workId = w.id
+                 AND ass.deletedAt IS NULL
+              LEFT JOIN ass.guide g
+              WHERE w.deletedAt IS NULL
+                AND (
+                      :#{#filter.resellerId} IS NULL
+                      OR r.id = :#{#filter.resellerId}
+                )
+                AND (
+                      :#{#filter.ref} IS NULL
+                      OR LOWER(o.ref1)
+                          LIKE LOWER(CONCAT('%', :#{#filter.ref}, '%'))
+                )
+                AND (
+                      :#{#filter.personInChargeId} IS NULL
+                      OR pc.id = :#{#filter.personInChargeId}
+                )
+                AND (
+                      :#{#filter.areaId} IS NULL
+                      OR a.id = :#{#filter.areaId}
+                )
+                AND (
+                      :#{#filter.serviceName} IS NULL
+                      OR LOWER(s.name)
+                          LIKE LOWER(CONCAT('%', :#{#filter.serviceName}, '%'))
+                )
+                AND (
+                      :#{#filter.guideName} IS NULL
+                      OR LOWER(g.fullName)
+                          LIKE LOWER(CONCAT('%', :#{#filter.guideName}, '%'))
+                )
+                AND (
+                      :#{#filter.status} IS NULL
+                      OR w.status = :#{#filter.status}
+                )
+                AND (
+                      :#{#filter.privateFilter} IS NULL
+                      OR o.isPrivate = :#{#filter.privateFilter}
+                )
+          """)
+  List<Long> findAllWorkIds(
+          @Param("filter") WorkFilter filter);
+
+  @Query("""
+              SELECT DISTINCT w.id
+              FROM Work w
+              LEFT JOIN w.orders o
+              LEFT JOIN o.reseller r
+              LEFT JOIN o.picContact pc
+              LEFT JOIN OrderService os
+                  ON os.order.id = o.id
+                 AND os.deletedAt IS NULL
+              LEFT JOIN os.service s
+              LEFT JOIN s.area a
+              LEFT JOIN Assignment ass
+                  ON ass.workId = w.id
+                 AND ass.deletedAt IS NULL
+              LEFT JOIN ass.guide g
+              WHERE w.deletedAt IS NULL
+                AND w.tourDate = :tourDate
+                AND (
+                      :#{#filter.resellerId} IS NULL
+                      OR r.id = :#{#filter.resellerId}
+                )
+                AND (
+                      :#{#filter.ref} IS NULL
+                      OR LOWER(o.ref1)
+                          LIKE LOWER(CONCAT('%', :#{#filter.ref}, '%'))
+                )
+                AND (
+                      :#{#filter.personInChargeId} IS NULL
+                      OR pc.id = :#{#filter.personInChargeId}
+                )
+                AND (
+                      :#{#filter.areaId} IS NULL
+                      OR a.id = :#{#filter.areaId}
+                )
+                AND (
+                      :#{#filter.serviceName} IS NULL
+                      OR LOWER(s.name)
+                          LIKE LOWER(CONCAT('%', :#{#filter.serviceName}, '%'))
+                )
+                AND (
+                      :#{#filter.guideName} IS NULL
+                      OR LOWER(g.fullName)
+                          LIKE LOWER(CONCAT('%', :#{#filter.guideName}, '%'))
+                )
+                AND (
+                      :#{#filter.status} IS NULL
+                      OR w.status = :#{#filter.status}
+                )
+                AND (
+                      :#{#filter.privateFilter} IS NULL
+                      OR o.isPrivate = :#{#filter.privateFilter}
+                )
+          """)
+  List<Long> findAllWorkIdsByTourDate(
+          @Param("filter") WorkFilter filter,
+          @Param("tourDate") LocalDate tourDate);
 
   @Query("""
           SELECT
@@ -107,16 +330,6 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
   List<WorkGuideProjection> findGuidesByWorkIds(
       @Param("workIds") List<Long> workIds);
 
-  @Query("""
-          SELECT
-              COALESCE(SUM(o.adultCount), 0) as totalAdults,
-              COALESCE(SUM(o.childCount), 0) as totalChildren
-          FROM Work w
-          LEFT JOIN w.orders o
-          WHERE w.deletedAt IS NULL
-      """)
-  WorkGuestSummaryProjection getGuestSummary();
-
   @Query(value = """
           SELECT
               w.id,
@@ -143,6 +356,19 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
               ) as isPrivate,
 
               (
+                  SELECT s.id
+                  FROM work_orders wo3
+                  JOIN order_services os
+                      ON os.order_id = wo3.order_id
+                  JOIN services s
+                      ON s.id = os.service_id
+                  WHERE wo3.work_id = w.id
+                    AND os.deleted_at IS NULL
+                  ORDER BY os.id
+                  LIMIT 1
+              ) as serviceId,
+
+              (
                   SELECT s.name
                   FROM work_orders wo3
                   JOIN order_services os
@@ -154,6 +380,21 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
                   ORDER BY os.id
                   LIMIT 1
               ) as serviceName,
+
+              (
+                  SELECT a.id
+                  FROM work_orders wo3
+                  JOIN order_services os
+                      ON os.order_id = wo3.order_id
+                  JOIN services s
+                      ON s.id = os.service_id
+                  JOIN areas a
+                      ON a.id = s.area_id
+                  WHERE wo3.work_id = w.id
+                    AND os.deleted_at IS NULL
+                  ORDER BY os.id
+                  LIMIT 1
+              ) as areaId,
 
               (
                   SELECT a.name

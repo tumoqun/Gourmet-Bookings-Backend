@@ -40,10 +40,10 @@ public interface ItineraryStopRepository extends JpaRepository<ItineraryStop, Lo
     List<WorkItineraryStopList> findByWorkId(@Param("workId") Long workId);
 
     @Query("""
-        SELECT COALESCE(MAX(s.stopSequence),0)
-        FROM ItineraryStop s
-        WHERE s.itineraryId = :itineraryId
-    """)
+                SELECT MAX(i.stopSequence)
+                FROM ItineraryStop i
+                WHERE i.itineraryId = :itineraryId
+            """)
     Integer findMaxSequenceByItineraryId(
             @Param("itineraryId") Long itineraryId);
 
