@@ -52,4 +52,5 @@ public class OrderCreateRequest {
     private List<OrderServiceRequest> orderServices;
     private List<OrderAdditionalServiceRequest> additionalServices;
     private List<Long> specialRequestTypeIds;
+    private List<OrderGuestRequest> guests;
 }

@@ -14,6 +14,7 @@ import com.example.demo.repository.AreaRepository;
 import com.example.demo.repository.DistanceBandRepository;
 import com.example.demo.repository.ServiceTypeRepository;
 import com.example.demo.repository.SpecialRequestTypeRepository;
+import com.example.demo.repository.OrderGuestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,6 +60,7 @@ public class OrderService {
     private final com.example.demo.repository.AgentRepository agentRepository;
     private final com.example.demo.repository.ResellerContactRepository resellerContactRepository;
     private final com.example.demo.repository.ItineraryRepository itineraryRepository;
+    private final OrderGuestRepository orderGuestRepository;
 
     public List<Order> findAllActive() {
         return orderRepository.findAllActive();
@@ -91,6 +93,10 @@ public class OrderService {
                         p -> (String) p[1],
                         (a, b) -> a
                 ));
+
+        List<com.example.demo.entity.OrderGuest> allGuests = orderGuestRepository.findByOrderIdIn(orderIds);
+        Map<Long, List<com.example.demo.entity.OrderGuest>> guestsByOrder = allGuests.stream()
+                .collect(Collectors.groupingBy(g -> g.getOrder().getId()));
 
         return orders.stream().map(order -> {
             com.example.demo.dto.OrderResponse response = new com.example.demo.dto.OrderResponse();
@@ -201,6 +207,24 @@ public class OrderService {
                 return new com.example.demo.dto.SpecialRequestTypeResponse(srt.getId(), srt.getCode(), srt.getLabel());
             }).collect(Collectors.toList()));
 
+            // Guests
+            List<com.example.demo.entity.OrderGuest> guests = guestsByOrder.getOrDefault(order.getId(), Collections.emptyList());
+            response.setGuests(guests.stream().map(g -> {
+                com.example.demo.dto.OrderGuestResponse r = new com.example.demo.dto.OrderGuestResponse();
+                r.setId(g.getId());
+                r.setFirstName(g.getFirstName());
+                r.setLastName(g.getLastName());
+                r.setGuestType(g.getGuestType());
+                r.setIsVip(g.getIsVip());
+                r.setAge(g.getAge());
+                r.setGender(g.getGender());
+                r.setNationality(g.getNationality());
+                r.setPhoneNumber(g.getPhoneNumber());
+                r.setAllergies(g.getAllergies());
+                r.setSpecialOccasion(g.getSpecialOccasion());
+                return r;
+            }).collect(Collectors.toList()));
+
             // Guide
             response.setGuide(guideByOrder.get(order.getId()));
 
@@ -227,6 +251,48 @@ public class OrderService {
 
     public Optional<Order> findById(Long id) {
         return orderRepository.findById(id);
+    }
+
+    public List<com.example.demo.dto.OrderGuestResponse> syncOrderGuests(Long orderId, List<com.example.demo.dto.OrderGuestRequest> guestsRequest) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        
+        List<OrderGuest> existingGuests = orderGuestRepository.findByOrderId(orderId);
+        orderGuestRepository.deleteAll(existingGuests);
+        
+        List<OrderGuest> newGuests = guestsRequest.stream().map(req -> {
+            OrderGuest g = new OrderGuest();
+            g.setOrder(order);
+            g.setFirstName(req.getFirstName());
+            g.setLastName(req.getLastName());
+            g.setGuestType(req.getGuestType());
+            g.setIsVip(req.getIsVip());
+            g.setAge(req.getAge());
+            g.setGender(req.getGender());
+            g.setNationality(req.getNationality());
+            g.setPhoneNumber(req.getPhoneNumber());
+            g.setAllergies(req.getAllergies());
+            g.setSpecialOccasion(req.getSpecialOccasion());
+            return g;
+        }).collect(Collectors.toList());
+        
+        List<OrderGuest> saved = orderGuestRepository.saveAll(newGuests);
+        
+        return saved.stream().map(g -> {
+            com.example.demo.dto.OrderGuestResponse r = new com.example.demo.dto.OrderGuestResponse();
+            r.setId(g.getId());
+            r.setFirstName(g.getFirstName());
+            r.setLastName(g.getLastName());
+            r.setGuestType(g.getGuestType());
+            r.setIsVip(g.getIsVip());
+            r.setAge(g.getAge());
+            r.setGender(g.getGender());
+            r.setNationality(g.getNationality());
+            r.setPhoneNumber(g.getPhoneNumber());
+            r.setAllergies(g.getAllergies());
+            r.setSpecialOccasion(g.getSpecialOccasion());
+            return r;
+        }).collect(Collectors.toList());
     }
 
     public Optional<Order> findByOrderNumber(String orderNumber) {
