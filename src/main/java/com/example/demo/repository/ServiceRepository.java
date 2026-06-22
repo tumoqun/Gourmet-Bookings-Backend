@@ -26,7 +26,7 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
     List<Service> findAllActive();
 
     @Query("""
-                SELECT
+                SELECT DISTINCT
                     sp.id as id,
                     sp.name as name,
                     sp.supplierType as supplierType
@@ -38,10 +38,21 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
                   AND (
                         :supplierType IS NULL
                         OR LOWER(sp.supplierType) = LOWER(:supplierType)
-                    )
+                  )
+                  AND (
+                        :workId IS NULL
+                        OR sp.id NOT IN (
+                            SELECT ist.supplierId
+                            FROM ItineraryStop ist
+                            JOIN Itinerary i
+                                 ON i.id = ist.itineraryId
+                            WHERE i.workId = :workId
+                        )
+                  )
                 ORDER BY sp.name
             """)
     List<ServiceSupplierProjection> findSuppliersByServiceId(
             @Param("serviceId") Long serviceId,
+            @Param("workId") Long workId,
             @Param("supplierType") String supplierType);
 }

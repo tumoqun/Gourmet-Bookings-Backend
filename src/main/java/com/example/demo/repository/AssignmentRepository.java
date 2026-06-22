@@ -3,6 +3,7 @@ package com.example.demo.repository;
 import com.example.demo.dto.AssignmentListProjection;
 import com.example.demo.entity.Assignment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -88,6 +89,7 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
             AND (:guideId IS NULL OR a.guide_id = :guideId)
             AND COALESCE(CAST(:requestedDate AS DATE), w.tour_date) = w.tour_date
+            AND COALESCE(:status, 'IN_PREP') <> w.status
             AND COALESCE(:status, w.status) = w.status
 
             GROUP BY
@@ -105,8 +107,19 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
                 a.created_at DESC
             """, nativeQuery = true)
     List<AssignmentListProjection> findAssignments(
-        @Param("guideId") Long guideId,
-        @Param("requestedDate") LocalDate requestedDate,
-        @Param("status") String status
-    );
+            @Param("guideId") Long guideId,
+            @Param("requestedDate") LocalDate requestedDate,
+            @Param("status") String status);
+
+    @Modifying
+    @Query("""
+                UPDATE Assignment a
+                SET a.role = 'guide',
+                    a.updatedAt = :updatedAt
+                WHERE a.workId = :workId
+                  AND a.deletedAt IS NULL
+            """)
+    void updateAllRolesToGuide(
+            @Param("workId") Long workId,
+            @Param("updatedAt") LocalDateTime updatedAt);
 }

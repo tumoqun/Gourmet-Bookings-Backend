@@ -44,19 +44,43 @@ public class AssignmentService {
     }
 
     public GuideAssignmentResponse acceptAssignment(Long assignmentId) {
+        // Update assignment status -> accepted
         Assignment assignment = getOwnedAssignment(assignmentId);
-        assignment.setStatus("accepted");
+        assignment.setStatus("ACCEPTED");
         assignment.setAcceptedAt(LocalDateTime.now());
         assignment.setUpdatedAt(LocalDateTime.now());
+
+        // Update work status -> accepted
+        Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Work not found: "
+                                + assignment.getWorkId()));
+        work.setStatus("ACCEPTED");
+        work.setUpdatedAt(LocalDateTime.now());
+        workRepository.save(work);
+
         return toResponse(assignmentRepository.save(assignment));
     }
 
     public GuideAssignmentResponse rejectAssignment(Long assignmentId, String reason) {
+        // Update work status -> rejected
         Assignment assignment = getOwnedAssignment(assignmentId);
-        assignment.setStatus("rejected");
+        assignment.setStatus("REJECTED");
         assignment.setRejectedAt(LocalDateTime.now());
         assignment.setRejectionReason(reason);
         assignment.setUpdatedAt(LocalDateTime.now());
+
+        // Update work status -> IN_PREP
+        Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Work not found: "
+                                + assignment.getWorkId()));
+        work.setStatus("IN_PREP");
+        work.setUpdatedAt(LocalDateTime.now());
+        workRepository.save(work);
+
         return toResponse(assignmentRepository.save(assignment));
     }
 
@@ -64,6 +88,17 @@ public class AssignmentService {
         Assignment assignment = getOwnedAssignment(assignmentId);
         assignment.setTourStartedAt(LocalDateTime.now());
         assignment.setUpdatedAt(LocalDateTime.now());
+
+        // Update work status -> STARTED
+        Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Work not found: "
+                                + assignment.getWorkId()));
+        work.setStatus("STARTED");
+        work.setUpdatedAt(LocalDateTime.now());
+        workRepository.save(work);
+
         return toResponse(assignmentRepository.save(assignment));
     }
 
@@ -71,6 +106,17 @@ public class AssignmentService {
         Assignment assignment = getOwnedAssignment(assignmentId);
         assignment.setTourEndedAt(LocalDateTime.now());
         assignment.setUpdatedAt(LocalDateTime.now());
+
+        // Update work status -> ENDED
+        Work work = workRepository
+                .findById(assignment.getWorkId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Work not found: "
+                                + assignment.getWorkId()));
+        work.setStatus("ENDED");
+        work.setUpdatedAt(LocalDateTime.now());
+        workRepository.save(work);
+
         return toResponse(assignmentRepository.save(assignment));
     }
 

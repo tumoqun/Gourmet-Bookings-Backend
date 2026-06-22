@@ -116,8 +116,8 @@ public class ServiceController {
     @GetMapping("/{id}/suppliers")
     @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
     public ResponseEntity<List<ServiceSupplierProjection>> getSuppliers(
-            @PathVariable Long id, @RequestParam String supplierType) {
+            @PathVariable Long id, @RequestParam Long workId, @RequestParam String supplierType) {
 
-        return ResponseEntity.ok(supplierService.getSuppliersByServiceId(id, supplierType));
+        return ResponseEntity.ok(supplierService.getSuppliersByServiceId(id, workId, supplierType));
     }
 }

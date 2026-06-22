@@ -10,9 +10,12 @@ import com.example.demo.dto.WorkOrderListProjection;
 import com.example.demo.dto.WorkOrderProjection;
 import com.example.demo.entity.Work;
 
+import jakarta.transaction.Transactional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -499,7 +502,23 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
 
           WHERE a.workId = :workId
             AND a.deletedAt IS NULL
+        
+        ORDER BY a.id ASC
       """)
   List<WorkGuideDetailProjection> findGuidesByWorkId(
       @Param("workId") Long workId);
+
+    @Modifying
+    @Transactional
+    @Query("""
+            UPDATE Work w
+            SET w.status = :status,
+                w.updatedAt = CURRENT_TIMESTAMP
+            WHERE w.id = :id
+            AND w.deletedAt IS NULL
+        """)
+    int updateStatus(
+        @Param("id") Long id,
+        @Param("status") String status
+    );
 }
