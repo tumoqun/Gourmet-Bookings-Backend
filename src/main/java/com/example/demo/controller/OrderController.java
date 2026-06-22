@@ -26,6 +26,7 @@ public class OrderController {
     private final WorkRepository workRepository;
     private final AssignmentRepository assignmentRepository;
     private final GuideRepository guideRepository;
+    private final OrderGuestRepository orderGuestRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('ORDERS_READ')")
@@ -78,12 +79,24 @@ public class OrderController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ORDERS_WRITE')")
-    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order order) {
+    public ResponseEntity<OrderResponse> updateOrder(@PathVariable Long id, @RequestBody Order order) {
         try {
             Order updatedOrder = orderService.updateOrder(id, order);
-            return ResponseEntity.ok(updatedOrder);
+            return ResponseEntity.ok(toOrderResponse(updatedOrder));
         } catch (Exception e) {
             log.error("Error updating order with id: {}", id, e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/{id}/guests")
+    @PreAuthorize("hasAuthority('ORDERS_WRITE')")
+    public ResponseEntity<List<OrderGuestResponse>> syncOrderGuests(@PathVariable Long id, @RequestBody List<OrderGuestRequest> guests) {
+        try {
+            List<OrderGuestResponse> responses = orderService.syncOrderGuests(id, guests);
+            return ResponseEntity.ok(responses);
+        } catch (Exception e) {
+            log.error("Error syncing guests for order with id: {}", id, e);
             return ResponseEntity.badRequest().build();
         }
     }
@@ -171,6 +184,8 @@ public class OrderController {
         response.setRef2(order.getRef2());
         response.setVoucherNumber(order.getVoucherNumber());
         response.setGuestEmail(order.getGuestEmail());
+        response.setLeaderPhone(order.getLeaderPhone());
+        response.setGuestGroupNotes(order.getGuestGroupNotes());
         response.setAdultCount(order.getAdultCount());
         response.setChildCount(order.getChildCount());
         response.setDietaryRestrictions(order.getDietaryRestrictions());
@@ -223,6 +238,27 @@ public class OrderController {
                         .map(osr -> {
                             SpecialRequestType srt = osr.getSpecialRequestType();
                             return new SpecialRequestTypeResponse(srt.getId(), srt.getCode(), srt.getLabel());
+                        })
+                        .collect(Collectors.toList())
+        );
+
+        // Guests — fetched explicitly to avoid lazy loading issues outside transaction
+        response.setGuests(
+                orderGuestRepository.findByOrderId(order.getId()).stream()
+                        .map(g -> {
+                            OrderGuestResponse r = new OrderGuestResponse();
+                            r.setId(g.getId());
+                            r.setFirstName(g.getFirstName());
+                            r.setLastName(g.getLastName());
+                            r.setGuestType(g.getGuestType());
+                            r.setIsVip(g.getIsVip());
+                            r.setAge(g.getAge());
+                            r.setGender(g.getGender());
+                            r.setNationality(g.getNationality());
+                            r.setPhoneNumber(g.getPhoneNumber());
+                            r.setAllergies(g.getAllergies());
+                            r.setSpecialOccasion(g.getSpecialOccasion());
+                            return r;
                         })
                         .collect(Collectors.toList())
         );

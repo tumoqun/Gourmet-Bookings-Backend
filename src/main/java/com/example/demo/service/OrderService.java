@@ -14,6 +14,7 @@ import com.example.demo.repository.AreaRepository;
 import com.example.demo.repository.DistanceBandRepository;
 import com.example.demo.repository.ServiceTypeRepository;
 import com.example.demo.repository.SpecialRequestTypeRepository;
+import com.example.demo.repository.OrderGuestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,6 +60,7 @@ public class OrderService {
     private final com.example.demo.repository.AgentRepository agentRepository;
     private final com.example.demo.repository.ResellerContactRepository resellerContactRepository;
     private final com.example.demo.repository.ItineraryRepository itineraryRepository;
+    private final OrderGuestRepository orderGuestRepository;
 
     public List<Order> findAllActive() {
         return orderRepository.findAllActive();
@@ -92,6 +94,10 @@ public class OrderService {
                         (a, b) -> a
                 ));
 
+        List<com.example.demo.entity.OrderGuest> allGuests = orderGuestRepository.findByOrderIdIn(orderIds);
+        Map<Long, List<com.example.demo.entity.OrderGuest>> guestsByOrder = allGuests.stream()
+                .collect(Collectors.groupingBy(g -> g.getOrder().getId()));
+
         return orders.stream().map(order -> {
             com.example.demo.dto.OrderResponse response = new com.example.demo.dto.OrderResponse();
             response.setId(order.getId());
@@ -111,6 +117,8 @@ public class OrderService {
             response.setRef2(order.getRef2());
             response.setVoucherNumber(order.getVoucherNumber());
             response.setGuestEmail(order.getGuestEmail());
+            response.setLeaderPhone(order.getLeaderPhone());
+            response.setGuestGroupNotes(order.getGuestGroupNotes());
             response.setAdultCount(order.getAdultCount());
             response.setChildCount(order.getChildCount());
             response.setDietaryRestrictions(order.getDietaryRestrictions());
@@ -199,6 +207,24 @@ public class OrderService {
                 return new com.example.demo.dto.SpecialRequestTypeResponse(srt.getId(), srt.getCode(), srt.getLabel());
             }).collect(Collectors.toList()));
 
+            // Guests
+            List<com.example.demo.entity.OrderGuest> guests = guestsByOrder.getOrDefault(order.getId(), Collections.emptyList());
+            response.setGuests(guests.stream().map(g -> {
+                com.example.demo.dto.OrderGuestResponse r = new com.example.demo.dto.OrderGuestResponse();
+                r.setId(g.getId());
+                r.setFirstName(g.getFirstName());
+                r.setLastName(g.getLastName());
+                r.setGuestType(g.getGuestType());
+                r.setIsVip(g.getIsVip());
+                r.setAge(g.getAge());
+                r.setGender(g.getGender());
+                r.setNationality(g.getNationality());
+                r.setPhoneNumber(g.getPhoneNumber());
+                r.setAllergies(g.getAllergies());
+                r.setSpecialOccasion(g.getSpecialOccasion());
+                return r;
+            }).collect(Collectors.toList()));
+
             // Guide
             response.setGuide(guideByOrder.get(order.getId()));
 
@@ -225,6 +251,48 @@ public class OrderService {
 
     public Optional<Order> findById(Long id) {
         return orderRepository.findById(id);
+    }
+
+    public List<com.example.demo.dto.OrderGuestResponse> syncOrderGuests(Long orderId, List<com.example.demo.dto.OrderGuestRequest> guestsRequest) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        
+        List<OrderGuest> existingGuests = orderGuestRepository.findByOrderId(orderId);
+        orderGuestRepository.deleteAll(existingGuests);
+        
+        List<OrderGuest> newGuests = guestsRequest.stream().map(req -> {
+            OrderGuest g = new OrderGuest();
+            g.setOrder(order);
+            g.setFirstName(req.getFirstName());
+            g.setLastName(req.getLastName());
+            g.setGuestType(req.getGuestType());
+            g.setIsVip(req.getIsVip());
+            g.setAge(req.getAge());
+            g.setGender(req.getGender());
+            g.setNationality(req.getNationality());
+            g.setPhoneNumber(req.getPhoneNumber());
+            g.setAllergies(req.getAllergies());
+            g.setSpecialOccasion(req.getSpecialOccasion());
+            return g;
+        }).collect(Collectors.toList());
+        
+        List<OrderGuest> saved = orderGuestRepository.saveAll(newGuests);
+        
+        return saved.stream().map(g -> {
+            com.example.demo.dto.OrderGuestResponse r = new com.example.demo.dto.OrderGuestResponse();
+            r.setId(g.getId());
+            r.setFirstName(g.getFirstName());
+            r.setLastName(g.getLastName());
+            r.setGuestType(g.getGuestType());
+            r.setIsVip(g.getIsVip());
+            r.setAge(g.getAge());
+            r.setGender(g.getGender());
+            r.setNationality(g.getNationality());
+            r.setPhoneNumber(g.getPhoneNumber());
+            r.setAllergies(g.getAllergies());
+            r.setSpecialOccasion(g.getSpecialOccasion());
+            return r;
+        }).collect(Collectors.toList());
     }
 
     public Optional<Order> findByOrderNumber(String orderNumber) {
@@ -413,22 +481,25 @@ public class OrderService {
         Order existingOrder = orderRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
-        existingOrder.setOrderChannel(order.getOrderChannel());
-        existingOrder.setIsTentative(order.getIsTentative());
-        existingOrder.setReseller(order.getReseller());
-        existingOrder.setPicContact(order.getPicContact());
-        existingOrder.setPicEmail(order.getPicEmail());
-        existingOrder.setCopyEmail(order.getCopyEmail());
-        existingOrder.setOriginalAgent(order.getOriginalAgent());
-        existingOrder.setRef1(order.getRef1());
-        existingOrder.setRef2(order.getRef2());
-        existingOrder.setVoucherNumber(order.getVoucherNumber());
-        existingOrder.setGuestEmail(order.getGuestEmail());
-        existingOrder.setAdultCount(order.getAdultCount());
-        existingOrder.setChildCount(order.getChildCount());
-        existingOrder.setDietaryRestrictions(order.getDietaryRestrictions());
-        existingOrder.setCurrencyCode(order.getCurrencyCode());
-        existingOrder.setTotalFeeAmount(order.getTotalFeeAmount());
+        if (order.getOrderChannel() != null) existingOrder.setOrderChannel(order.getOrderChannel());
+        if (order.getIsTentative() != null) existingOrder.setIsTentative(order.getIsTentative());
+        if (order.getIsPrivate() != null) existingOrder.setIsPrivate(order.getIsPrivate());
+        if (order.getReseller() != null) existingOrder.setReseller(order.getReseller());
+        if (order.getPicContact() != null) existingOrder.setPicContact(order.getPicContact());
+        if (order.getPicEmail() != null) existingOrder.setPicEmail(order.getPicEmail());
+        if (order.getCopyEmail() != null) existingOrder.setCopyEmail(order.getCopyEmail());
+        if (order.getOriginalAgent() != null) existingOrder.setOriginalAgent(order.getOriginalAgent());
+        if (order.getRef1() != null) existingOrder.setRef1(order.getRef1());
+        if (order.getRef2() != null) existingOrder.setRef2(order.getRef2());
+        if (order.getVoucherNumber() != null) existingOrder.setVoucherNumber(order.getVoucherNumber());
+        if (order.getGuestEmail() != null) existingOrder.setGuestEmail(order.getGuestEmail());
+        if (order.getLeaderPhone() != null) existingOrder.setLeaderPhone(order.getLeaderPhone());
+        if (order.getGuestGroupNotes() != null) existingOrder.setGuestGroupNotes(order.getGuestGroupNotes());
+        if (order.getAdultCount() != null) existingOrder.setAdultCount(order.getAdultCount());
+        if (order.getChildCount() != null) existingOrder.setChildCount(order.getChildCount());
+        if (order.getDietaryRestrictions() != null) existingOrder.setDietaryRestrictions(order.getDietaryRestrictions());
+        if (order.getCurrencyCode() != null) existingOrder.setCurrencyCode(order.getCurrencyCode());
+        if (order.getTotalFeeAmount() != null) existingOrder.setTotalFeeAmount(order.getTotalFeeAmount());
         existingOrder.setUpdatedAt(LocalDateTime.now());
 
         Order updatedOrder = orderRepository.save(existingOrder);

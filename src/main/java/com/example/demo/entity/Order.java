@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "orders")
@@ -75,6 +77,12 @@ public class Order {
     
     @Column(name = "guest_email", length = 150)
     private String guestEmail;
+
+    @Column(name = "leader_phone", length = 50)
+    private String leaderPhone;
+
+    @Column(name = "guest_group_notes", columnDefinition = "TEXT")
+    private String guestGroupNotes;
     
     @Column(name = "adult_count")
     private Integer adultCount;
@@ -102,6 +110,9 @@ public class Order {
 
     @ManyToMany(mappedBy = "orders")
     private Set<Work> works = new HashSet<>();
+    
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderGuest> guests = new ArrayList<>();
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

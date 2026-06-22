@@ -29,6 +29,8 @@ public class OrderResponse {
     private String ref2;
     private String voucherNumber;
     private String guestEmail;
+    private String leaderPhone;
+    private String guestGroupNotes;
     private Integer adultCount;
     private Integer childCount;
     private String dietaryRestrictions;
@@ -43,5 +45,6 @@ public class OrderResponse {
     private List<OrderAdditionalServiceResponse> additionalServices;
     private List<SpecialRequestTypeResponse> specialRequests;
     private List<OrderFinancialLineResponse> financialLines;
+    private List<OrderGuestResponse> guests;
     private String guide;
 }

@@ -1,24 +1,24 @@
-# Gourmet Bookings Backend API
+# TMA Tour Management Backend API
 
-Spring Boot backend application for the Gourmet Bookings order management system with PostgreSQL database.
+Spring Boot backend application for the TMA Tour Management order management system with PostgreSQL database.
 
 ## Prerequisites
 
 - Java 17 or higher
 - Maven 3.6 or higher
 - PostgreSQL 15 or higher
-- PostgreSQL database named `gourmet_bookings`
+- PostgreSQL database named `tma_tour_management`
 
 ## Database Setup
 
 1. Create PostgreSQL database:
    ```sql
-   CREATE DATABASE gourmet_bookings;
+   CREATE DATABASE tma_tour_management;
    ```
 
 2. Update database connection in `src/main/resources/application.properties`:
    ```properties
-   spring.datasource.url=jdbc:postgresql://localhost:5432/gourmet_bookings
+   spring.datasource.url=jdbc:postgresql://localhost:5432/tma_tour_management
    spring.datasource.username=postgres
    spring.datasource.password=your_password
    ```

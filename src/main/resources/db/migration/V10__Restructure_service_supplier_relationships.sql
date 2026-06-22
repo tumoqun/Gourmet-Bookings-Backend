@@ -15,6 +15,13 @@ CREATE TABLE service_suppliers (
         ON DELETE CASCADE
 );
 
+-- =====================================================
+--  Add vehicle_type to order_additional_services
+-- =====================================================
+
+ALTER TABLE order_additional_services
+    ADD COLUMN vehicle_type VARCHAR(50);
+
 CREATE INDEX idx_service_suppliers_service_id
     ON service_suppliers(service_id);
 
