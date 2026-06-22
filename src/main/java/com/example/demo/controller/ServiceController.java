@@ -1,10 +1,13 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ServiceSupplierProjection;
 import com.example.demo.entity.Area;
 import com.example.demo.entity.DistanceBand;
 import com.example.demo.entity.Service;
 import com.example.demo.entity.ServiceType;
 import com.example.demo.service.CatalogService;
+import com.example.demo.service.SupplierService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +24,7 @@ import java.util.Optional;
 public class ServiceController {
 
     private final CatalogService catalogService;
+    private final SupplierService supplierService;
 
     @GetMapping("/areas")
     @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
@@ -107,5 +111,13 @@ public class ServiceController {
             log.error("Error updating service with id: {}", id, e);
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/{id}/suppliers")
+    @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
+    public ResponseEntity<List<ServiceSupplierProjection>> getSuppliers(
+            @PathVariable Long id, @RequestParam String supplierType) {
+
+        return ResponseEntity.ok(supplierService.getSuppliersByServiceId(id, supplierType));
     }
 }
