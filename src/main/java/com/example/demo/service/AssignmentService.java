@@ -51,14 +51,16 @@ public class AssignmentService {
         assignment.setUpdatedAt(LocalDateTime.now());
 
         // Update work status -> accepted
-        Work work = workRepository
-                .findById(assignment.getWorkId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Work not found: "
-                                + assignment.getWorkId()));
-        work.setStatus("ACCEPTED");
-        work.setUpdatedAt(LocalDateTime.now());
-        workRepository.save(work);
+        boolean hasPendingAssignment = assignmentRepository.existsPendingAssignment(assignment.getWorkId());
+        if (!hasPendingAssignment) {
+            Work work = workRepository
+                    .findById(assignment.getWorkId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Work not found: " + assignment.getWorkId()));
+            work.setStatus("ACCEPTED");
+            work.setUpdatedAt(LocalDateTime.now());
+            workRepository.save(work);
+        }
 
         return toResponse(assignmentRepository.save(assignment));
     }

@@ -376,14 +376,17 @@ public class WorkService {
 
           // Update work status -> accepted
           if ("accepted".equalsIgnoreCase(request.getStatus().toLowerCase())) {
-            Work work = workRepository
-                .findById(assignment.getWorkId())
-                .orElseThrow(() -> new RuntimeException(
-                    "Work not found: "
-                        + assignment.getWorkId()));
-            work.setStatus("ACCEPTED");
-            work.setUpdatedAt(LocalDateTime.now());
-            workRepository.save(work);
+            boolean hasPendingAssignment = assignmentRepository.existsPendingAssignment(
+                assignment.getWorkId());
+            if (!hasPendingAssignment) {
+              Work work = workRepository
+                  .findById(assignment.getWorkId())
+                  .orElseThrow(() -> new RuntimeException(
+                      "Work not found: " + assignment.getWorkId()));
+              work.setStatus("ACCEPTED");
+              work.setUpdatedAt(LocalDateTime.now());
+              workRepository.save(work);
+            }
           }
           break;
 

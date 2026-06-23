@@ -122,4 +122,14 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     void updateAllRolesToGuide(
             @Param("workId") Long workId,
             @Param("updatedAt") LocalDateTime updatedAt);
+
+    @Query("""
+                SELECT COUNT(a) > 0
+                FROM Assignment a
+                WHERE a.workId = :workId
+                  AND a.deletedAt IS NULL
+                  AND UPPER(a.status) NOT IN ('ACCEPTED', 'REMOVED')
+            """)
+    boolean existsPendingAssignment(
+            @Param("workId") Long workId);
 }
