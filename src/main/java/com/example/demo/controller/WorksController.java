@@ -47,4 +47,10 @@ public class WorksController {
     List<WorkGuideDetailProjection> guides = workService.getWorkGuidesByWorkId(id);
     return ResponseEntity.ok(guides);
   }
+
+  @PutMapping("/{id}/status")
+  public ResponseEntity<Void> updateStatus(@PathVariable Long id, @RequestBody UpdateWorkStatusRequest request) {
+    workService.updateStatus(id, request);
+    return ResponseEntity.ok().build();
+  }
 }

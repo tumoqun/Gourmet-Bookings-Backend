@@ -25,7 +25,7 @@ public class SupplierService {
     return supplierRepository.findByIsActiveAndDeletedAtIsNull(isActive);
   }
 
-  public List<ServiceSupplierProjection> getSuppliersByServiceId(Long serviceId, String supplierType) {
-    return serviceRepository.findSuppliersByServiceId(serviceId, supplierType);
+  public List<ServiceSupplierProjection> getSuppliersByServiceId(Long serviceId, Long workId, String supplierType) {
+    return serviceRepository.findSuppliersByServiceId(serviceId, workId, supplierType);
   }
 }

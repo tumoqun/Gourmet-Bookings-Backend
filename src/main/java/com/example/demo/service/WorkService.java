@@ -25,6 +25,7 @@ import com.example.demo.dto.OrderInfoResponse;
 import com.example.demo.dto.OrderSpecialRequestProjection;
 import com.example.demo.dto.ServiceInfoResponse;
 import com.example.demo.dto.SpecialRequestTypeResponse;
+import com.example.demo.dto.UpdateWorkStatusRequest;
 import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkFilter;
 import com.example.demo.dto.WorkGuideDetailProjection;
@@ -310,27 +311,26 @@ public class WorkService {
         .existsByWorkIdAndGuideIdAndDeletedAtIsNull(
             request.getWorkId(),
             request.getGuideId());
-
     if (existed) {
       throw new RuntimeException(
           "Guide already assigned to this work");
     }
 
-    Assignment assignment = new Assignment();
+    if ("leader".equalsIgnoreCase(request.getRole())) {
+      assignmentRepository.updateAllRolesToGuide(
+          request.getWorkId(),
+          LocalDateTime.now());
+    }
 
+    Assignment assignment = new Assignment();
     assignment.setWorkId(request.getWorkId());
     assignment.setGuideId(request.getGuideId());
-
     assignment.setStatus(request.getStatus());
-
     assignment.setRole(request.getRole());
-
     assignment.setNote(request.getNote());
-
     assignment.setIsCalendarInvitation(
         Boolean.TRUE.equals(
             request.getIsCalendarInvitation()));
-
     assignment.setCreatedAt(LocalDateTime.now());
     assignment.setUpdatedAt(LocalDateTime.now());
 
@@ -376,14 +376,17 @@ public class WorkService {
 
           // Update work status -> accepted
           if ("accepted".equalsIgnoreCase(request.getStatus().toLowerCase())) {
-            Work work = workRepository
-                .findById(assignment.getWorkId())
-                .orElseThrow(() -> new RuntimeException(
-                    "Work not found: "
-                        + assignment.getWorkId()));
-            work.setStatus("ACCEPTED");
-            work.setUpdatedAt(LocalDateTime.now());
-            workRepository.save(work);
+            boolean hasPendingAssignment = assignmentRepository.existsPendingAssignment(
+                assignment.getWorkId());
+            if (!hasPendingAssignment) {
+              Work work = workRepository
+                  .findById(assignment.getWorkId())
+                  .orElseThrow(() -> new RuntimeException(
+                      "Work not found: " + assignment.getWorkId()));
+              work.setStatus("ACCEPTED");
+              work.setUpdatedAt(LocalDateTime.now());
+              workRepository.save(work);
+            }
           }
           break;
 
@@ -438,5 +441,14 @@ public class WorkService {
         .isCalendarInvitation(
             saved.getIsCalendarInvitation())
         .build();
+  }
+
+  public void updateStatus(Long id, UpdateWorkStatusRequest request) {
+    Work work = workRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
+
+    work.setStatus(request.getStatus());
+
+    workRepository.save(work);
   }
 }
