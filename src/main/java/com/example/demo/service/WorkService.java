@@ -20,18 +20,24 @@ import org.springframework.stereotype.Service;
 import com.example.demo.dto.AssignmentRequest;
 import com.example.demo.dto.AssignmentResponse;
 import com.example.demo.dto.AssignmentUpdateRequest;
+import com.example.demo.dto.GuestProjection;
+import com.example.demo.dto.GuestResponse;
 import com.example.demo.dto.GuideResponse;
 import com.example.demo.dto.OrderInfoResponse;
 import com.example.demo.dto.OrderSpecialRequestProjection;
 import com.example.demo.dto.ServiceInfoResponse;
 import com.example.demo.dto.SpecialRequestTypeResponse;
 import com.example.demo.dto.UpdateWorkStatusRequest;
+import com.example.demo.dto.WorkDetailForGuideProjection;
 import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkFilter;
 import com.example.demo.dto.WorkGuideDetailProjection;
 import com.example.demo.dto.WorkGuideProjection;
 import com.example.demo.dto.WorkListProjection;
 import com.example.demo.dto.WorkListResponse;
+import com.example.demo.dto.WorkOrderForGuideProjection;
+import com.example.demo.dto.WorkOrderGuestProjection;
+import com.example.demo.dto.WorkOrderGuestResponse;
 import com.example.demo.dto.WorkOrderListProjection;
 import com.example.demo.dto.WorkOrderListResponse;
 import com.example.demo.dto.WorkOrderProjection;
@@ -261,6 +267,15 @@ public class WorkService {
         .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
   }
 
+  public WorkDetailForGuideProjection getWorkByIdForGuide(Long id) {
+    return workRepository.findWorkDetailByIdForGuide(id)
+        .orElseThrow(() -> new RuntimeException("Work not found with id: " + id));
+  }
+
+  public List<WorkOrderForGuideProjection> getOrdersByWorkIdForGuide(Long id) {
+    return workRepository.findOrdersByWorkIdForGuide(id);
+  }
+
   public List<WorkOrderListResponse> getWorkOrderListByWorkId(Long workId, String status) {
     List<WorkOrderListProjection> orders = workRepository.findOrdersByWorkId(workId, status);
     if (orders == null || orders.isEmpty()) {
@@ -450,5 +465,47 @@ public class WorkService {
     work.setStatus(request.getStatus());
 
     workRepository.save(work);
+  }
+
+  public List<WorkOrderGuestResponse> getGuestsByWorkForGuide(Long id) {
+    List<WorkOrderGuestProjection> orders =
+            workRepository.findOrdersWithAverageAge(id);
+    List<GuestProjection> guests =
+            workRepository.findGuestsByWorkId(id);
+    Map<Long, List<GuestResponse>> guestMap =
+            guests.stream()
+                    .collect(Collectors.groupingBy(
+                            GuestProjection::getOrderId,
+                            Collectors.mapping(g -> {
+                                GuestResponse guest = new GuestResponse();
+                                guest.setId(g.getId());
+                                guest.setFirstName(g.getFirstName());
+                                guest.setLastName(g.getLastName());
+                                guest.setPhoneNumber(g.getPhoneNumber());
+                                guest.setAge(g.getAge());
+                                guest.setGender(g.getGender());
+                                guest.setAllergies(g.getAllergies());
+                                guest.setSpecialOccasion(g.getSpecialOccasion());
+                                guest.setDietaryRestrictions(g.getDietaryRestrictions());
+                                return guest;
+                            }, Collectors.toList())
+                    ));
+    return orders.stream()
+            .map(o -> {
+                WorkOrderGuestResponse response =
+                        new WorkOrderGuestResponse();
+                response.setOrderId(o.getOrderId());
+                response.setAdultCount(o.getAdultCount());
+                response.setChildCount(o.getChildCount());
+                response.setGuestGroupNotes(o.getGuestGroupNotes());
+                response.setLeaderPhone(o.getLeaderPhone());
+                response.setAverageAge(o.getAverageAge());
+                response.setGuests(
+                        guestMap.getOrDefault(
+                                o.getOrderId(),
+                                Collections.emptyList()));
+                return response;
+            })
+            .toList();
   }
 }
