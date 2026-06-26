@@ -16,11 +16,11 @@ import com.example.demo.service.ReceiptService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/receipts")
-@PreAuthorize("hasAuthority('RECEIPTS_OPS_READ')")
 public class ReceiptedController {
   private final ReceiptService receiptService;
 
   @GetMapping("/by-work")
+  @PreAuthorize("hasAnyAuthority('RECEIPTS_OPS_READ', 'GUIDE_TOURS_READ')")
   public ResponseEntity<List<WorkReceiptResponse>> getReceiptsByWork(@RequestParam Long workId) {
     List<WorkReceiptResponse> receipts = receiptService.findReceiptsByWorkId(workId);
     return ResponseEntity.ok(receipts);

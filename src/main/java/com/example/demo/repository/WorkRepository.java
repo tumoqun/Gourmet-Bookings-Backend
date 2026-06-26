@@ -1,11 +1,15 @@
 package com.example.demo.repository;
 
+import com.example.demo.dto.GuestProjection;
 import com.example.demo.dto.OrderSpecialRequestProjection;
+import com.example.demo.dto.WorkDetailForGuideProjection;
 import com.example.demo.dto.WorkDetailProjection;
 import com.example.demo.dto.WorkFilter;
 import com.example.demo.dto.WorkGuideDetailProjection;
 import com.example.demo.dto.WorkGuideProjection;
 import com.example.demo.dto.WorkListProjection;
+import com.example.demo.dto.WorkOrderForGuideProjection;
+import com.example.demo.dto.WorkOrderGuestProjection;
 import com.example.demo.dto.WorkOrderListProjection;
 import com.example.demo.dto.WorkOrderProjection;
 import com.example.demo.entity.Work;
@@ -428,6 +432,84 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
   Optional<WorkDetailProjection> findWorkDetailById(
       @Param("id") Long id);
 
+    @Query(value = """
+          SELECT
+              w.id AS workId,
+              w.status AS status,
+              w.tour_date AS tourDate,
+              w.tour_start_time AS tourStartTime,
+              w.tour_end_time AS tourEndTime,
+              CAST(
+                EXTRACT(EPOCH FROM (w.tour_end_time - w.tour_start_time))/60
+                AS BIGINT
+            ) AS durationMinutes,
+              w.location_address AS locationAddress,
+              a.name AS agentName,
+              r.name AS resellerName,
+              o.ref1 AS ref1,
+              o.ref2 AS ref2,
+              s.name AS serviceName
+          FROM works w
+          JOIN work_orders wo
+              ON wo.work_id = w.id
+          JOIN orders o
+              ON o.id = wo.order_id
+          LEFT JOIN agents a
+              ON a.id = o.original_agent_id
+          LEFT JOIN resellers r
+              ON r.id = o.reseller_id
+          LEFT JOIN order_services os
+              ON os.order_id = o.id
+             AND os.deleted_at IS NULL
+          LEFT JOIN services s
+              ON s.id = os.service_id
+             AND s.deleted_at IS NULL
+          WHERE w.id = :workId
+            AND w.deleted_at IS NULL
+            AND o.deleted_at IS NULL
+          LIMIT 1
+          """, nativeQuery = true)
+  Optional<WorkDetailForGuideProjection> findWorkDetailByIdForGuide(@Param("workId") Long workId);
+
+  @Query(value = """
+        SELECT
+            o.id AS orderId,
+            rc.name AS contactName,
+            o.ref1 AS ref1,
+            o.ref2 AS ref2,
+            o.is_private AS isPrivate,
+            o.adult_count AS adultCount,
+            o.child_count AS childCount,
+            o.total_fee_amount AS totalFeeAmount,
+            oss.label AS status,
+            o.guest_group_notes AS notes,
+            w.tour_date AS tourDate,
+            w.tour_start_time AS tourStartTime,
+            w.tour_end_time AS tourEndTime,
+            s.name AS serviceName
+        FROM works w
+        JOIN work_orders wo
+            ON wo.work_id = w.id
+        JOIN orders o
+            ON o.id = wo.order_id
+        JOIN order_statuses oss
+            ON oss.id = o.status_id
+        LEFT JOIN reseller_contacts rc
+            ON rc.id = o.pic_contact_id
+        LEFT JOIN order_services os
+            ON os.order_id = o.id
+        AND os.deleted_at IS NULL
+        LEFT JOIN services s
+            ON s.id = os.service_id
+        AND s.deleted_at IS NULL
+        WHERE w.id = :workId
+        AND w.deleted_at IS NULL
+        AND o.deleted_at IS NULL
+        ORDER BY o.id
+        """, nativeQuery = true)
+    List<WorkOrderForGuideProjection> findOrdersByWorkIdForGuide(
+        @Param("workId") Long workId);
+
   @Query("""
           SELECT
               o.id as orderId,
@@ -521,4 +603,60 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
         @Param("id") Long id,
         @Param("status") String status
     );
+
+    @Query(value = """
+    SELECT
+        o.id AS orderId,
+        o.adult_count AS adultCount,
+        o.child_count AS childCount,
+        o.guest_group_notes AS guestGroupNotes,
+        o.leader_phone AS leaderPhone,
+        ROUND(AVG(og.age), 1) AS averageAge
+    FROM works w
+    JOIN work_orders wo
+        ON wo.work_id = w.id
+    JOIN orders o
+        ON o.id = wo.order_id
+    LEFT JOIN order_guests og
+        ON og.order_id = o.id
+    WHERE w.id = :workId
+      AND w.deleted_at IS NULL
+      AND o.deleted_at IS NULL
+    GROUP BY
+        o.id,
+        o.adult_count,
+        o.child_count,
+        o.guest_group_notes,
+        o.leader_phone
+    ORDER BY o.id
+    """, nativeQuery = true)
+    List<WorkOrderGuestProjection> findOrdersWithAverageAge(
+        @Param("workId") Long workId);
+
+    @Query(value = """
+    SELECT
+        og.id AS id,
+        o.id AS orderId,
+        og.first_name AS firstName,
+        og.last_name AS lastName,
+        og.phone_number AS phoneNumber,
+        og.age AS age,
+        og.gender AS gender,
+        og.allergies AS allergies,
+        og.special_occasion AS specialOccasion,
+        og.dietary_restrictions AS dietaryRestrictions
+    FROM works w
+    JOIN work_orders wo
+        ON wo.work_id = w.id
+    JOIN orders o
+        ON o.id = wo.order_id
+    JOIN order_guests og
+        ON og.order_id = o.id
+    WHERE w.id = :workId
+      AND w.deleted_at IS NULL
+      AND o.deleted_at IS NULL
+    ORDER BY o.id, og.id
+    """, nativeQuery = true)
+    List<GuestProjection> findGuestsByWorkId(
+        @Param("workId") Long workId);
 }

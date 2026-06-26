@@ -21,17 +21,18 @@ import jakarta.validation.Valid;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/itineraries")
-@PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
 public class ItineraryController {
   private final ItineraryService itineraryService;
 
   @GetMapping("/stops/by-work")
+  @PreAuthorize("hasAnyAuthority('ASSIGNMENTS_READ', 'GUIDE_TOURS_READ')")
   public ResponseEntity<List<WorkItineraryStopList>> getItineraryStopsByWork(@RequestParam Long workId) {
     List<WorkItineraryStopList> stops = itineraryService.findStopsByWorkId(workId);
     return ResponseEntity.ok(stops);
   }
 
   @PostMapping("/stops")
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
   public ResponseEntity<CreateItineraryStopResponse> createItineraryStop(
       @Valid @RequestBody CreateItineraryStopRequest request) {
 
@@ -39,6 +40,7 @@ public class ItineraryController {
   }
 
   @PatchMapping("/stops/{stopId}/status")
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
   public ResponseEntity<Void> updateStatus(
       @PathVariable Long stopId,
       @Valid @RequestBody UpdateItineraryStopStatusRequest request) {

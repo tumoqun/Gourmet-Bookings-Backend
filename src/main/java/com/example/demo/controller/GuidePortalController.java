@@ -2,7 +2,12 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AssignmentListProjection;
 import com.example.demo.dto.GuideAssignmentResponse;
+import com.example.demo.dto.WorkDetailForGuideProjection;
+import com.example.demo.dto.WorkOrderForGuideProjection;
+import com.example.demo.dto.WorkOrderGuestResponse;
 import com.example.demo.service.AssignmentService;
+import com.example.demo.service.WorkService;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,13 +25,13 @@ import java.util.Map;
 public class GuidePortalController {
 
     private final AssignmentService assignmentService;
+    private final WorkService workService;
 
     @GetMapping("/assignments")
     @PreAuthorize("hasAuthority('GUIDE_TOURS_READ')")
     public ResponseEntity<List<AssignmentListProjection>> listAssignments(
-       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate requestedDate,
-        @RequestParam(required = false) String status
-    ) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate requestedDate,
+            @RequestParam(required = false) String status) {
         return ResponseEntity.ok(assignmentService.listAssignmentsForCurrentUser(requestedDate, status));
     }
 
@@ -55,5 +60,23 @@ public class GuidePortalController {
     @PreAuthorize("hasAuthority('GUIDE_WORK_LIFECYCLE')")
     public ResponseEntity<GuideAssignmentResponse> endWork(@PathVariable Long id) {
         return ResponseEntity.ok(assignmentService.endWork(id));
+    }
+
+    @GetMapping("/work/{id}")
+    @PreAuthorize("hasAuthority('GUIDE_TOURS_READ')")
+    public WorkDetailForGuideProjection getWorkByIdForGuide(@PathVariable Long id) {
+        return workService.getWorkByIdForGuide(id);
+    }
+
+    @GetMapping("/work/{id}/orders")
+    @PreAuthorize("hasAuthority('GUIDE_TOURS_READ')")
+    public List<WorkOrderForGuideProjection> getWorkOrdersForGuide(@PathVariable Long id) {
+        return workService.getOrdersByWorkIdForGuide(id);
+    }
+
+    @GetMapping("/work/{id}/guests")
+    @PreAuthorize("hasAuthority('GUIDE_TOURS_READ')")
+    public List<WorkOrderGuestResponse> getGuestsByWorkForGuide(@PathVariable Long id) {
+        return workService.getGuestsByWorkForGuide(id);
     }
 }

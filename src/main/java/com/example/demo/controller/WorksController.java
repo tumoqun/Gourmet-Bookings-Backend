@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/works")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
 public class WorksController {
   private final WorkService workService;
 
   @GetMapping
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
   public ResponseEntity<WorkSearchResponse> getAll(
       @ModelAttribute WorkFilter filter,
       Pageable pageable) {
@@ -30,11 +30,13 @@ public class WorksController {
   }
 
   @GetMapping("/{id}")
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
   public WorkDetailProjection getWorkById(@PathVariable Long id) {
     return workService.getWorkById(id);
   }
 
   @GetMapping("/{workId}/orders")
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
   public ResponseEntity<List<WorkOrderListResponse>> getWorkOrderListByWorkId(
       @PathVariable Long workId, @RequestParam(required = false) String status) {
 
@@ -43,12 +45,14 @@ public class WorksController {
   }
 
   @GetMapping("/{id}/guides")
+  @PreAuthorize("hasAnyAuthority('ASSIGNMENTS_READ', 'GUIDE_TOURS_READ')")
   public ResponseEntity<List<WorkGuideDetailProjection>> getWorkGuidesByWorkId(@PathVariable Long id) {
     List<WorkGuideDetailProjection> guides = workService.getWorkGuidesByWorkId(id);
     return ResponseEntity.ok(guides);
   }
 
   @PutMapping("/{id}/status")
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_READ')")
   public ResponseEntity<Void> updateStatus(@PathVariable Long id, @RequestBody UpdateWorkStatusRequest request) {
     workService.updateStatus(id, request);
     return ResponseEntity.ok().build();

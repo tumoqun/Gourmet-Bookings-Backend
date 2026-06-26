@@ -81,6 +81,9 @@ public class Order {
     @Column(name = "leader_phone", length = 50)
     private String leaderPhone;
 
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
     @Column(name = "guest_group_notes", columnDefinition = "TEXT")
     private String guestGroupNotes;
     

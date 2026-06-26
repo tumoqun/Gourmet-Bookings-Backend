@@ -51,6 +51,9 @@ public class OrderGuest {
     @Column(name = "special_occasion", length = 500)
     private String specialOccasion;
 
+    @Column(name = "dietary_restrictions", length = 500)
+    private String dietaryRestrictions;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
