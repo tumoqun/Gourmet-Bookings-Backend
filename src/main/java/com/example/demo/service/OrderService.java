@@ -361,10 +361,7 @@ public class OrderService {
             savedOrder = orderRepository.save(savedOrder);
         }
 
-        if (Boolean.TRUE.equals(savedOrder.getIsPrivate())) {
-            ensureWorkForOrder(savedOrder);
-        }
-
+        // Work should only be created after the order is confirmed.
         log.info("Created order with ID: {}", savedOrder.getId());
         return savedOrder;
     }
