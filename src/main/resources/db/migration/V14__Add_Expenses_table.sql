@@ -9,7 +9,7 @@ CREATE TABLE expenses (
     id BIGSERIAL PRIMARY KEY,
     assignment_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
-    submittedBy VARCHAR(255) NOT NULL,
+    submitted_by VARCHAR(255) NOT NULL,
     amount DECIMAL(12, 2) NOT NULL,
     expense_date DATE NOT NULL,
     expense_time TIME,

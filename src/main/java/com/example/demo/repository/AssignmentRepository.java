@@ -89,8 +89,11 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
             AND (:guideId IS NULL OR a.guide_id = :guideId)
             AND COALESCE(CAST(:requestedDate AS DATE), w.tour_date) = w.tour_date
-            AND COALESCE(:status, 'IN_PREP') <> w.status
-            AND COALESCE(:status, w.status) = w.status
+            AND (
+                (:status IS NULL AND w.status <> 'IN_PREP')
+                OR
+                (:status IS NOT NULL AND w.status = :status)
+            )
 
             GROUP BY
                 a.id,
