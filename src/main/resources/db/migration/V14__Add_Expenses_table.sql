@@ -22,8 +22,6 @@ CREATE TABLE expenses (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP,
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
-    FOREIGN KEY (itinerary_stop_id) REFERENCES itinerary_stops(id) ON DELETE SET NULL,
     FOREIGN KEY (verified_by_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
