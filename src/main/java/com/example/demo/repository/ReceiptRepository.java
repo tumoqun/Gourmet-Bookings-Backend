@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.dto.ReceiptResponse;
 import com.example.demo.dto.WorkReceiptResponse;
 import com.example.demo.entity.Receipt;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
@@ -20,6 +22,8 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     List<Receipt> findByReceiptDateBetweenAndDeletedAtIsNull(LocalDate startDate, LocalDate endDate);
 
     List<Receipt> findByDeletedAtIsNull();
+
+    Optional<Receipt> findByIdAndDeletedAtIsNull(Long id);
 
     @Query("""
                 SELECT new com.example.demo.dto.WorkReceiptResponse(
@@ -60,4 +64,29 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
             """)
     List<WorkReceiptResponse> findReceiptsByWorkId(
             @Param("workId") Long workId);
+
+    @Query("""
+                SELECT new com.example.demo.dto.ReceiptResponse(
+                    r.id,
+                    r.assignmentId,
+                    r.supplierId,
+                    s.name AS supplierName,
+                    s.supplierType,
+                    r.itineraryStopId,
+                    r.amount,
+                    r.fee,
+                    r.tax,
+                    r.receiptDate,
+                    r.receiptTime,
+                    r.notes,
+                    r.imageUrl,
+                    r.checkNumber,
+                    r.isVerified
+                )
+                FROM Receipt r
+                LEFT JOIN Supplier s ON s.id = r.supplierId
+                WHERE r.id = :id
+                  AND r.deletedAt IS NULL
+            """)
+    Optional<ReceiptResponse> findReceiptById(@Param("id") Long id);
 }

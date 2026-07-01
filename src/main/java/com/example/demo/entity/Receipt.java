@@ -71,6 +71,9 @@ public class Receipt {
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified = false;
 
+    @Column(name = "check_number", nullable = false)
+    private Boolean checkNumber = false;
+
     @Column(name = "verified_by_id")
     private Long verifiedById;
 

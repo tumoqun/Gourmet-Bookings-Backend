@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.dto.AvailableSupplierProjection;
 import com.example.demo.dto.WorkItineraryStopList;
 import com.example.demo.entity.ItineraryStop;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -57,5 +58,26 @@ public interface ItineraryStopRepository extends JpaRepository<ItineraryStop, Lo
     int updateStatus(
             @Param("stopId") Long stopId,
             @Param("status") String status);
+
+    @Query(value = """
+            SELECT
+                its.id AS itineraryStopId,
+                s.id AS id,
+                s.name AS name,
+                s.supplier_type AS supplierType,
+                s.address
+            FROM itinerary_stops its
+            JOIN itineraries i
+                ON i.id = its.itinerary_id
+            JOIN suppliers s
+                ON s.id = its.supplier_id
+            LEFT JOIN receipts r
+                ON r.itinerary_stop_id = its.id
+                AND r.deleted_at IS NULL
+            WHERE i.work_id = :workId
+                AND r.id IS NULL
+            ORDER BY i.day_number, its.stop_sequence
+            """, nativeQuery = true)
+    List<AvailableSupplierProjection> findAvailableSuppliersNoReceipt(Long workId);
 }
 
