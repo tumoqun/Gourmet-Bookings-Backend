@@ -24,13 +24,8 @@ public class Expense {
   @JoinColumn(name = "assignment_id", nullable = false)
   private Assignment assignment;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "supplier_id")
-  private Supplier supplier;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "itinerary_stop_id")
-  private ItineraryStop itineraryStop;
+  @Column(name = "name", length = 255)
+  private String name;
 
   @Column(name = "amount", nullable = false, precision = 12, scale = 2)
   private BigDecimal amount;
@@ -56,6 +51,9 @@ public class Expense {
 
   @Column(name = "verified_at")
   private LocalDateTime verifiedAt;
+
+  @Column(name = "submitted_by", nullable = true, length = 100)
+  private String submittedBy;
 
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;

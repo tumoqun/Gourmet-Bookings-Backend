@@ -8,8 +8,8 @@ ALTER TABLE order_guests ADD COLUMN dietary_restrictions TEXT;
 CREATE TABLE expenses (
     id BIGSERIAL PRIMARY KEY,
     assignment_id BIGINT NOT NULL,
-    supplier_id BIGINT,
-    itinerary_stop_id BIGINT,
+    name VARCHAR(255) NOT NULL,
+    submittedBy VARCHAR(255) NOT NULL,
     amount DECIMAL(12, 2) NOT NULL,
     expense_date DATE NOT NULL,
     expense_time TIME,
@@ -26,3 +26,6 @@ CREATE TABLE expenses (
     FOREIGN KEY (itinerary_stop_id) REFERENCES itinerary_stops(id) ON DELETE SET NULL,
     FOREIGN KEY (verified_by_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
+-- Add column check_number to receipts table
+ALTER TABLE receipts ADD COLUMN check_number BOOLEAN NOT NULL DEFAULT FALSE;
