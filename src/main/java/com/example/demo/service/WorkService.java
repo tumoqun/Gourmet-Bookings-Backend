@@ -65,10 +65,11 @@ public class WorkService {
 
     filter.setPrivateFilter(buildPrivateFilter(filter));
     List<Long> allWorkIds;
-    if (filter.getTourDate() != null) {
-      allWorkIds = workRepository.findAllWorkIdsByTourDate(
+    if (filter.getFromDate() != null || filter.getToDate() != null) {
+      allWorkIds = workRepository.findAllWorkIdsByDateRange(
           filter,
-          filter.getTourDate());
+          filter.getFromDate(),
+          filter.getToDate());
     } else {
       allWorkIds = workRepository.findAllWorkIds(filter);
     }
@@ -97,10 +98,11 @@ public class WorkService {
     }
 
     Page<WorkListProjection> workPage;
-    if (filter.getTourDate() != null) {
-      workPage = workRepository.findWorkPageByTourDate(
+    if (filter.getFromDate() != null || filter.getToDate() != null) {
+      workPage = workRepository.findWorkPageByDateRange(
           filter,
-          filter.getTourDate(),
+          filter.getFromDate(),
+          filter.getToDate(),
           pageable);
     } else {
       workPage = workRepository.findWorkPage(filter, pageable);
@@ -351,16 +353,6 @@ public class WorkService {
 
     Assignment saved = assignmentRepository.save(assignment);
 
-    // Update work status -> offered
-    Work work = workRepository.findById(request.getWorkId())
-        .orElseThrow(() -> new RuntimeException("Work not found"));
-
-    if (!"OFFERED".equalsIgnoreCase(work.getStatus())) {
-      work.setStatus("OFFERED");
-      work.setUpdatedAt(LocalDateTime.now());
-      workRepository.save(work);
-    }
-
     return AssignmentResponse.builder()
         .id(saved.getId())
         .workId(saved.getWorkId())
@@ -390,9 +382,11 @@ public class WorkService {
           assignment.setAcceptedAt(LocalDateTime.now());
 
           // Update work status -> accepted
-          if ("accepted".equalsIgnoreCase(request.getStatus().toLowerCase())) {
-            boolean hasPendingAssignment = assignmentRepository.existsPendingAssignment(
-                assignment.getWorkId());
+          if ("accepted".equalsIgnoreCase(request.getStatus())) {
+            List<Assignment> activeAssignments = assignmentRepository.findByWorkIdAndDeletedAtIsNull(assignment.getWorkId());
+            boolean hasPendingAssignment = activeAssignments.stream()
+                .filter(a -> !a.getId().equals(assignment.getId()))
+                .anyMatch(a -> "pending".equalsIgnoreCase(a.getStatus()));
             if (!hasPendingAssignment) {
               Work work = workRepository
                   .findById(assignment.getWorkId())

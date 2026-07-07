@@ -30,6 +30,8 @@ public class ReceiptResponse {
 
   private BigDecimal tax;
 
+  private BigDecimal estimatedTax;
+
   private LocalDate receiptDate;
 
   private LocalTime receiptTime;

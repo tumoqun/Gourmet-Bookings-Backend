@@ -117,7 +117,8 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
                  AND ass.deletedAt IS NULL
               LEFT JOIN ass.guide g
               WHERE w.deletedAt IS NULL
-                AND w.tourDate = :tourDate
+                AND (COALESCE(:fromDate, w.tourDate) <= w.tourDate)
+                AND (COALESCE(:toDate, w.tourDate) >= w.tourDate)
                 AND (
                       :#{#filter.resellerId} IS NULL
                       OR r.id = :#{#filter.resellerId}
@@ -154,9 +155,10 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
                       OR o.isPrivate = :#{#filter.privateFilter}
                 )
           """)
-  Page<WorkListProjection> findWorkPageByTourDate(
+  Page<WorkListProjection> findWorkPageByDateRange(
           @Param("filter") WorkFilter filter,
-          @Param("tourDate") LocalDate tourDate,
+          @Param("fromDate") LocalDate fromDate,
+          @Param("toDate") LocalDate toDate,
           Pageable pageable);
 
   @Query("""
@@ -230,7 +232,8 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
                  AND ass.deletedAt IS NULL
               LEFT JOIN ass.guide g
               WHERE w.deletedAt IS NULL
-                AND w.tourDate = :tourDate
+                AND (COALESCE(:fromDate, w.tourDate) <= w.tourDate)
+                AND (COALESCE(:toDate, w.tourDate) >= w.tourDate)
                 AND (
                       :#{#filter.resellerId} IS NULL
                       OR r.id = :#{#filter.resellerId}
@@ -267,9 +270,10 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
                       OR o.isPrivate = :#{#filter.privateFilter}
                 )
           """)
-  List<Long> findAllWorkIdsByTourDate(
+  List<Long> findAllWorkIdsByDateRange(
           @Param("filter") WorkFilter filter,
-          @Param("tourDate") LocalDate tourDate);
+          @Param("fromDate") LocalDate fromDate,
+          @Param("toDate") LocalDate toDate);
 
   @Query("""
           SELECT

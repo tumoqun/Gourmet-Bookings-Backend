@@ -44,6 +44,9 @@ public class Receipt {
     @Column(name = "tax", precision = 12, scale = 2)
     private BigDecimal tax;
 
+    @Column(name = "estimated_tax", precision = 12, scale = 2)
+    private BigDecimal estimatedTax;
+
     @Column(name = "currency_code", length = 3)
     private String currencyCode = "USD";
 

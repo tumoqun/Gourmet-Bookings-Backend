@@ -36,7 +36,7 @@ public class ReceiptedController {
   @PreAuthorize("hasAnyAuthority('RECEIPTS_OPS_READ', 'GUIDE_TOURS_READ')")
   public ResponseEntity<List<AvailableSupplierProjection>> getAvailableSuppliers(@PathVariable Long workId) {
     return ResponseEntity.ok(
-        receiptService.getAvailableSuppliersNoReceipt(workId));
+        receiptService.getAvailableSuppliers(workId));
   }
 
   @PostMapping

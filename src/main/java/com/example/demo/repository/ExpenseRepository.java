@@ -53,4 +53,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
           """)
   Optional<ExpenseProjection> findProjectionById(
           @Param("id") Long id);
+
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.assignment.id = :assignmentId AND e.deletedAt IS NULL")
+    java.math.BigDecimal sumAmountByAssignmentId(@Param("assignmentId") Long assignmentId);
 }

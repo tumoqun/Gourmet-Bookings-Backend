@@ -30,8 +30,8 @@ public class ReceiptService {
     return receiptRepository.findReceiptsByWorkId(workId);
   }
 
-  public List<AvailableSupplierProjection> getAvailableSuppliersNoReceipt(Long workId) {
-    return itineraryStopRepository.findAvailableSuppliersNoReceipt(workId);
+  public List<AvailableSupplierProjection> getAvailableSuppliers(Long workId) {
+    return itineraryStopRepository.findAvailableSuppliers(workId);
   }
 
   public Long createReceipt(ReceiptRequest request) {
@@ -47,6 +47,7 @@ public class ReceiptService {
     receipt.setAmount(request.getAmount());
     receipt.setFee(request.getFee());
     receipt.setTax(request.getTax());
+    receipt.setEstimatedTax(request.getEstimatedTax());
     receipt.setCurrencyCode(
         request.getCurrencyCode() == null
             ? "USD"
@@ -86,6 +87,7 @@ public class ReceiptService {
     receipt.setAmount(request.getAmount());
     receipt.setFee(request.getFee());
     receipt.setTax(request.getTax());
+    receipt.setEstimatedTax(request.getEstimatedTax());
     receipt.setCheckNumber(request.getCheckNumber());
     receipt.setIsVerified(request.getIsVerified());
     receipt.setNotes(request.getNotes());
