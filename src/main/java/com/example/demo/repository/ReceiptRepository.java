@@ -76,6 +76,7 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
                     r.amount,
                     r.fee,
                     r.tax,
+                    r.estimatedTax,
                     r.receiptDate,
                     r.receiptTime,
                     r.notes,
@@ -89,4 +90,7 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
                   AND r.deletedAt IS NULL
             """)
     Optional<ReceiptResponse> findReceiptById(@Param("id") Long id);
+
+    @Query("SELECT COALESCE(SUM(r.amount), 0) FROM Receipt r WHERE r.assignmentId = :assignmentId AND r.deletedAt IS NULL")
+    java.math.BigDecimal sumAmountByAssignmentId(@Param("assignmentId") Long assignmentId);
 }

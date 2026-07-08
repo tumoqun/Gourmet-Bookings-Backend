@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.example.demo.entity.SalaryScale;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -40,6 +41,13 @@ public class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "guide_id", insertable = false, updatable = false)
     private Guide guide;
+
+    @Column(name = "salary_scale_key", length = 100)
+    private String salaryScaleKey;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "salary_scale_key", insertable = false, updatable = false)
+    private SalaryScale salaryScale;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;

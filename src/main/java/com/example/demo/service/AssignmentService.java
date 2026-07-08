@@ -29,15 +29,15 @@ public class AssignmentService {
     private final GuideRepository guideRepository;
 
     @Transactional(readOnly = true)
-    public List<AssignmentListProjection> listAssignmentsForCurrentUser(LocalDate requestedDate, String status) {
+    public List<AssignmentListProjection> listAssignmentsForCurrentUser(LocalDate fromDate, LocalDate toDate, String status) {
         AppUserDetails user = SecurityUtils.currentUser();
         if (user.isAdmin()) {
-            return assignmentRepository.findAssignments(null, requestedDate, status);
+            return assignmentRepository.findAssignments(null, fromDate, toDate, status);
         } else if (user.isGuide()) {
             if (user.getGuideId() == null) {
                 throw new AccessDeniedException("Guide account is not linked to a guide profile");
             }
-            return assignmentRepository.findAssignments(user.getGuideId(), requestedDate, status);
+            return assignmentRepository.findAssignments(user.getGuideId(), fromDate, toDate, status);
         } else {
             throw new AccessDeniedException("Access denied");
         }
@@ -50,8 +50,11 @@ public class AssignmentService {
         assignment.setAcceptedAt(LocalDateTime.now());
         assignment.setUpdatedAt(LocalDateTime.now());
 
-        // Update work status -> accepted
-        boolean hasPendingAssignment = assignmentRepository.existsPendingAssignment(assignment.getWorkId());
+        // Update work status -> accepted if no pending assignments are left
+        List<Assignment> activeAssignments = assignmentRepository.findByWorkIdAndDeletedAtIsNull(assignment.getWorkId());
+        boolean hasPendingAssignment = activeAssignments.stream()
+                .filter(a -> !a.getId().equals(assignment.getId()))
+                .anyMatch(a -> "pending".equalsIgnoreCase(a.getStatus()));
         if (!hasPendingAssignment) {
             Work work = workRepository
                     .findById(assignment.getWorkId())
