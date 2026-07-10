@@ -36,7 +36,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ORDERS_READ')")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'GUIDE_TOURS_READ')")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         Optional<Order> order = orderService.findById(id);
         return order.map(value -> ResponseEntity.ok(toOrderResponse(value)))
