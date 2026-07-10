@@ -12,9 +12,11 @@ import com.example.demo.dto.UpdateItineraryStopStatusRequest;
 import com.example.demo.dto.WorkItineraryStopList;
 import com.example.demo.entity.Itinerary;
 import com.example.demo.entity.ItineraryStop;
+import com.example.demo.entity.ItineraryNote;
 import com.example.demo.entity.Supplier;
 import com.example.demo.repository.ItineraryRepository;
 import com.example.demo.repository.ItineraryStopRepository;
+import com.example.demo.repository.ItineraryNoteRepository;
 import com.example.demo.repository.ServiceRepository;
 import com.example.demo.repository.SupplierRepository;
 
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ItineraryService {
   private final ItineraryRepository itineraryRepository;
   private final ItineraryStopRepository itineraryStopRepository;
+  private final ItineraryNoteRepository itineraryNoteRepository;
   private final ServiceRepository serviceRepository;
   private final SupplierRepository supplierRepository;
 
@@ -145,5 +148,49 @@ public class ItineraryService {
     if (updated == 0) {
       throw new RuntimeException("Itinerary stop not found: " + stopId);
     }
-}
+  }
+
+  public Itinerary getOrCreateItinerary(Long workId) {
+    return itineraryRepository.findFirstByWorkIdOrderByDayNumberAsc(workId)
+        .orElseGet(() -> {
+          Itinerary newItinerary = new Itinerary();
+          newItinerary.setWorkId(workId);
+          newItinerary.setDayNumber(1);
+          newItinerary.setDayTitle("Day 1");
+          return itineraryRepository.save(newItinerary);
+        });
+  }
+
+  public ItineraryNote addItineraryNote(Long itineraryId, String noteUrl, String noteName) {
+    Itinerary itinerary = itineraryRepository.findById(itineraryId)
+        .orElseThrow(() -> new RuntimeException("Itinerary not found: " + itineraryId));
+    
+    ItineraryNote note = new ItineraryNote();
+    note.setItineraryId(itineraryId);
+    note.setNoteUrl(noteUrl);
+    note.setNoteName(noteName);
+    
+    itinerary.getNotes().add(note);
+    itinerary.setUpdatedAt(LocalDateTime.now());
+    itineraryRepository.save(itinerary);
+    
+    // Find the saved note to return it with its generated ID
+    return itinerary.getNotes().stream()
+        .filter(n -> n.getNoteUrl().equals(noteUrl))
+        .findFirst()
+        .orElse(note);
+  }
+
+  public void deleteItineraryNote(Long itineraryId, Long noteId) {
+    Itinerary itinerary = itineraryRepository.findById(itineraryId)
+        .orElseThrow(() -> new RuntimeException("Itinerary not found: " + itineraryId));
+    
+    itinerary.getNotes().removeIf(n -> n.getId().equals(noteId));
+    itinerary.setUpdatedAt(LocalDateTime.now());
+    itineraryRepository.save(itinerary);
+  }
+
+  public List<ItineraryNote> findNotesByWorkId(Long workId) {
+    return itineraryNoteRepository.findByWorkId(workId);
+  }
 }

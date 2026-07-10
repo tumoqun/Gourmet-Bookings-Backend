@@ -30,9 +30,10 @@ public class GuidePortalController {
     @GetMapping("/assignments")
     @PreAuthorize("hasAuthority('GUIDE_TOURS_READ')")
     public ResponseEntity<List<AssignmentListProjection>> listAssignments(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate requestedDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(required = false) String status) {
-        return ResponseEntity.ok(assignmentService.listAssignmentsForCurrentUser(requestedDate, status));
+        return ResponseEntity.ok(assignmentService.listAssignmentsForCurrentUser(fromDate, toDate, status));
     }
 
     @PostMapping("/assignments/{id}/accept")

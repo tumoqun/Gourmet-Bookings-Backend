@@ -27,7 +27,10 @@ public class WorkFilter {
   private String status;
 
   @DateTimeFormat(pattern = "yyyy-MM-dd")
-  private LocalDate tourDate;
+  private LocalDate fromDate;
+
+  @DateTimeFormat(pattern = "yyyy-MM-dd")
+  private LocalDate toDate;
 
   private Boolean isPrivate;
 

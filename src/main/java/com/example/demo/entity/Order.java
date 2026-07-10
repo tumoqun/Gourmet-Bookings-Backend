@@ -86,6 +86,15 @@ public class Order {
 
     @Column(name = "guest_group_notes", columnDefinition = "TEXT")
     private String guestGroupNotes;
+
+    @Column(name = "guest_special_requests", columnDefinition = "TEXT")
+    private String guestSpecialRequests;
+
+    @Column(name = "hired_car_driver_guide", length = 255)
+    private String hiredCarDriverGuide;
+
+    @Column(name = "internal_information", columnDefinition = "TEXT")
+    private String internalInformation;
     
     @Column(name = "adult_count")
     private Integer adultCount;

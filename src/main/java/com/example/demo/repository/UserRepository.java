@@ -28,4 +28,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllActive();
     
     boolean existsByEmail(String email);
+
+    java.util.Optional<com.example.demo.entity.User> findByGuideId(Long guideId);
 }

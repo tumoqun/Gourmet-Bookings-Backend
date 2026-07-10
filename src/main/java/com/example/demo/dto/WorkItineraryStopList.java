@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -19,6 +20,8 @@ public interface WorkItineraryStopList {
   String getStopType();
 
   LocalTime getScheduledTime();
+
+  LocalDate getTourDate();
 
   Integer getEstimatedDurationMinutes();
 

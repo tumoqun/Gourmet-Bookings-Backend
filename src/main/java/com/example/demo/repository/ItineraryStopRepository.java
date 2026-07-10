@@ -25,6 +25,7 @@ public interface ItineraryStopRepository extends JpaRepository<ItineraryStop, Lo
             s.stopSequence AS stopSequence,
             s.stopType AS stopType,
             s.scheduledTime AS scheduledTime,
+            w.tourDate AS tourDate,
             s.estimatedDurationMinutes AS estimatedDurationMinutes,
             s.description AS description,
             s.specialNotes AS specialNotes,
@@ -34,6 +35,7 @@ public interface ItineraryStopRepository extends JpaRepository<ItineraryStop, Lo
         FROM ItineraryStop s
         JOIN Itinerary i ON i.id = s.itineraryId
         JOIN Supplier sp ON sp.id = s.supplierId
+        JOIN Work w ON w.id = i.workId
         WHERE i.workId = :workId
           AND sp.deletedAt IS NULL
         ORDER BY s.stopSequence
@@ -71,13 +73,9 @@ public interface ItineraryStopRepository extends JpaRepository<ItineraryStop, Lo
                 ON i.id = its.itinerary_id
             JOIN suppliers s
                 ON s.id = its.supplier_id
-            LEFT JOIN receipts r
-                ON r.itinerary_stop_id = its.id
-                AND r.deleted_at IS NULL
             WHERE i.work_id = :workId
-                AND r.id IS NULL
             ORDER BY i.day_number, its.stop_sequence
             """, nativeQuery = true)
-    List<AvailableSupplierProjection> findAvailableSuppliersNoReceipt(Long workId);
+    List<AvailableSupplierProjection> findAvailableSuppliers(Long workId);
 }
 

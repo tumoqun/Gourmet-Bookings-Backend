@@ -19,6 +19,8 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
     List<Assignment> findByWorkId(@Param("workId") Long workId);
 
+    List<Assignment> findByWorkIdAndDeletedAtIsNull(@Param("workId") Long workId);
+
     List<Assignment> findByWorkIdIn(List<Long> workIds);
 
     List<Assignment> findByStatus(@Param("status") String status);
@@ -31,6 +33,8 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     List<Assignment> findAllActive();
 
     boolean existsByWorkIdAndGuideIdAndDeletedAtIsNull(Long workId, Long guideId);
+
+    java.util.Optional<com.example.demo.entity.Assignment> findByWorkIdAndGuideIdAndDeletedAtIsNull(Long workId, Long guideId);
 
     @Query(value = """
             SELECT
@@ -88,9 +92,13 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
             WHERE a.deleted_at IS NULL
 
             AND (:guideId IS NULL OR a.guide_id = :guideId)
-            AND COALESCE(CAST(:requestedDate AS DATE), w.tour_date) = w.tour_date
-            AND COALESCE(:status, 'IN_PREP') <> w.status
-            AND COALESCE(:status, w.status) = w.status
+            AND (CAST(:fromDate AS DATE) IS NULL OR w.tour_date >= CAST(:fromDate AS DATE))
+            AND (CAST(:toDate AS DATE) IS NULL OR w.tour_date <= CAST(:toDate AS DATE))
+            AND (
+                (CAST(:status AS VARCHAR) IS NULL AND w.status <> 'IN_PREP')
+                OR
+                (CAST(:status AS VARCHAR) IS NOT NULL AND w.status = CAST(:status AS VARCHAR))
+            )
 
             GROUP BY
                 a.id,
@@ -108,7 +116,8 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
             """, nativeQuery = true)
     List<AssignmentListProjection> findAssignments(
             @Param("guideId") Long guideId,
-            @Param("requestedDate") LocalDate requestedDate,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate,
             @Param("status") String status);
 
     @Modifying

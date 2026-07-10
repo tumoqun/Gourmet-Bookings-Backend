@@ -20,6 +20,8 @@ public class UpdateReceiptRequest {
 
   private BigDecimal tax;
 
+  private BigDecimal estimatedTax;
+
   private Boolean checkNumber;
 
   private Boolean isVerified;

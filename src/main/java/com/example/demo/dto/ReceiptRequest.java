@@ -35,6 +35,8 @@ public class ReceiptRequest {
 
   private BigDecimal tax;
 
+  private BigDecimal estimatedTax;
+
   private String currencyCode;
 
   private LocalDate receiptDate;

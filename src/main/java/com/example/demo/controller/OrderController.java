@@ -36,7 +36,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ORDERS_READ')")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'GUIDE_TOURS_READ')")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         Optional<Order> order = orderService.findById(id);
         return order.map(value -> ResponseEntity.ok(toOrderResponse(value)))
@@ -195,6 +195,9 @@ public class OrderController {
         response.setGuestEmail(order.getGuestEmail());
         response.setLeaderPhone(order.getLeaderPhone());
         response.setGuestGroupNotes(order.getGuestGroupNotes());
+        response.setGuestSpecialRequests(order.getGuestSpecialRequests());
+        response.setHiredCarDriverGuide(order.getHiredCarDriverGuide());
+        response.setInternalInformation(order.getInternalInformation());
         response.setAdultCount(order.getAdultCount());
         response.setChildCount(order.getChildCount());
         response.setDietaryRestrictions(order.getDietaryRestrictions());
