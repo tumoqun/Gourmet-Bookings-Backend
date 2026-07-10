@@ -40,7 +40,7 @@ public class OrderService {
     private static final String STATUS_OFFERED = "OFFERED";
     private static final String STATUS_CONFIRMED = "CONFIRMED";
     private static final String STATUS_CANCELLED = "CANCELLED";
-    private static final BigDecimal TAX_RATE = new BigDecimal("0.08");
+    private static final BigDecimal TAX_RATE = new BigDecimal("0.10");
 
     private final OrderRepository orderRepository;
     private final OrderServiceRepository orderServiceRepository;

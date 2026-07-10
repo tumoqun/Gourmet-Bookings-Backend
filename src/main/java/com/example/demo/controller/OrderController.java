@@ -58,6 +58,15 @@ public class OrderController {
         return ResponseEntity.ok(orders.stream().map(this::toOrderResponse).collect(Collectors.toList()));
     }
 
+    @GetMapping("/{id}/work-id")
+    @PreAuthorize("hasAuthority('ORDERS_READ')")
+    public ResponseEntity<Long> getLinkedWorkId(@PathVariable Long id) {
+        return workRepository.findByOrdersIdAndDeletedAtIsNull(id).stream()
+                .findFirst()
+                .map(work -> ResponseEntity.ok(work.getId()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/reseller/{resellerId}")
     @PreAuthorize("hasAuthority('ORDERS_READ')")
     public ResponseEntity<List<OrderResponse>> getOrdersByReseller(@PathVariable Long resellerId) {
