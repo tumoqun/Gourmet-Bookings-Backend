@@ -119,6 +119,9 @@ public class OrderService {
             response.setGuestEmail(order.getGuestEmail());
             response.setLeaderPhone(order.getLeaderPhone());
             response.setGuestGroupNotes(order.getGuestGroupNotes());
+            response.setGuestSpecialRequests(order.getGuestSpecialRequests());
+            response.setHiredCarDriverGuide(order.getHiredCarDriverGuide());
+            response.setInternalInformation(order.getInternalInformation());
             response.setAdultCount(order.getAdultCount());
             response.setChildCount(order.getChildCount());
             response.setDietaryRestrictions(order.getDietaryRestrictions());
@@ -492,6 +495,9 @@ public class OrderService {
         if (order.getGuestEmail() != null) existingOrder.setGuestEmail(order.getGuestEmail());
         if (order.getLeaderPhone() != null) existingOrder.setLeaderPhone(order.getLeaderPhone());
         if (order.getGuestGroupNotes() != null) existingOrder.setGuestGroupNotes(order.getGuestGroupNotes());
+        if (order.getGuestSpecialRequests() != null) existingOrder.setGuestSpecialRequests(order.getGuestSpecialRequests());
+        if (order.getHiredCarDriverGuide() != null) existingOrder.setHiredCarDriverGuide(order.getHiredCarDriverGuide());
+        if (order.getInternalInformation() != null) existingOrder.setInternalInformation(order.getInternalInformation());
         if (order.getAdultCount() != null) existingOrder.setAdultCount(order.getAdultCount());
         if (order.getChildCount() != null) existingOrder.setChildCount(order.getChildCount());
         if (order.getDietaryRestrictions() != null) existingOrder.setDietaryRestrictions(order.getDietaryRestrictions());

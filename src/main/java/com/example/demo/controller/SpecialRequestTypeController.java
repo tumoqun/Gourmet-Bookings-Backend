@@ -21,7 +21,7 @@ public class SpecialRequestTypeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ')")
+    @PreAuthorize("hasAnyAuthority('ORDERS_READ', 'ASSIGNMENTS_READ', 'GUIDE_TOURS_READ')")
     public List<SpecialRequestTypeResponse> getAll() {
         return repository.findAll().stream()
                 .map(srt -> new SpecialRequestTypeResponse(srt.getId(), srt.getCode(), srt.getLabel()))

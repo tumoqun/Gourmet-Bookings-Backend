@@ -186,6 +186,9 @@ public class OrderController {
         response.setGuestEmail(order.getGuestEmail());
         response.setLeaderPhone(order.getLeaderPhone());
         response.setGuestGroupNotes(order.getGuestGroupNotes());
+        response.setGuestSpecialRequests(order.getGuestSpecialRequests());
+        response.setHiredCarDriverGuide(order.getHiredCarDriverGuide());
+        response.setInternalInformation(order.getInternalInformation());
         response.setAdultCount(order.getAdultCount());
         response.setChildCount(order.getChildCount());
         response.setDietaryRestrictions(order.getDietaryRestrictions());
