@@ -31,6 +31,9 @@ public class OrderResponse {
     private String guestEmail;
     private String leaderPhone;
     private String guestGroupNotes;
+    private String guestSpecialRequests;
+    private String hiredCarDriverGuide;
+    private String internalInformation;
     private Integer adultCount;
     private Integer childCount;
     private String dietaryRestrictions;
