@@ -1,20 +1,16 @@
 package com.example.demo.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResponse {
-    
-    private Long id;
-    private RoleResponse role;
+public class UserRequest {
     private String fullName;
     private String email;
-    private Boolean isActive;
-    private Long guideId;
+    private String role;
     private String salaryScaleKey;
     private Long resellerId;
 }
