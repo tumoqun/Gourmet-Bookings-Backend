@@ -9,6 +9,8 @@ public interface WorkGuideDetailProjection {
 
   String getPhone();
 
+  String getAvatar();
+
   String getRole();
 
   String getStatus();

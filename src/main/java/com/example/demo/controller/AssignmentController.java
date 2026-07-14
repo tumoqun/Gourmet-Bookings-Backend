@@ -6,6 +6,7 @@ import com.example.demo.service.WorkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -33,5 +34,25 @@ public class AssignmentController {
 
     return ResponseEntity.ok(
         workService.updateAssignment(request));
+  }
+
+  @PutMapping("/{id}/extra-hours")
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_ASSIGN')")
+  public ResponseEntity<AssignmentResponse> updateExtraHours(
+      @PathVariable Long id,
+      @RequestBody UpdateAssignmentExtraHoursRequest request) {
+
+    return ResponseEntity.ok(
+        workService.updateAssignmentExtraHours(id, request));
+  }
+
+  @PutMapping("/{id}/hourly-salary")
+  @PreAuthorize("hasAuthority('ASSIGNMENTS_ASSIGN')")
+  public ResponseEntity<AssignmentResponse> updateHourlySalary(
+      @PathVariable Long id,
+      @RequestBody UpdateAssignmentHourlySalaryRequest request) {
+
+    return ResponseEntity.ok(
+        workService.updateAssignmentHourlySalary(id, request));
   }
 }

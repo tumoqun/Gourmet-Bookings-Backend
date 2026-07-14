@@ -72,4 +72,10 @@ public class Assignment {
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
+
+    @Column(name = "extra_hours_minutes")
+    private Integer extraHoursMinutes;
+
+    @Column(name = "hourly_salary_override")
+    private java.math.BigDecimal hourlySalaryOverride;
 }

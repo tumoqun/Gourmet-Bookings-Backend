@@ -447,6 +447,12 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
                 EXTRACT(EPOCH FROM (w.tour_end_time - w.tour_start_time))/60
                 AS BIGINT
             ) AS durationMinutes,
+              s.duration_minutes AS serviceDurationMinutes,
+              s.is_private_available AS isPrivateAvailable,
+              o.adult_count AS adultCount,
+              o.child_count AS childCount,
+              w.tour_started_at AS tourStartedAt,
+              w.tour_ended_at AS tourEndedAt,
               w.location_address AS locationAddress,
               a.name AS agentName,
               r.name AS resellerName,
@@ -574,6 +580,7 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
           SELECT
               g.fullName as name,
               g.phone as phone,
+              g.avatar as avatar,
 
               a.id as id,
               a.guideId as guideId,
