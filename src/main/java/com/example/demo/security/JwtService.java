@@ -56,4 +56,17 @@ public class JwtService {
     public List<String> extractPermissions(String token) {
         return parseClaims(token).get("permissions", List.class);
     }
+
+    public String generatePasswordConfirmationToken(String email) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 86400000); // 24 hours
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("purpose", "confirm-password")
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(secretKey)
+                .compact();
+    }
 }

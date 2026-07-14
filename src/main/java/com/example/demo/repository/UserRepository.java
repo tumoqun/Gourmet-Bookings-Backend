@@ -30,4 +30,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     java.util.Optional<com.example.demo.entity.User> findByGuideId(Long guideId);
+
+    @Query("""
+            SELECT u
+            FROM User u
+            WHERE LOWER(u.fullName) LIKE LOWER(:search)
+               OR LOWER(u.email) LIKE LOWER(:search)
+            ORDER BY u.createdAt DESC
+            """)
+    org.springframework.data.domain.Page<User> searchUsers(@Param("search") String search, org.springframework.data.domain.Pageable pageable);
 }
