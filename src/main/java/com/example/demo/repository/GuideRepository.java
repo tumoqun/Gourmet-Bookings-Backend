@@ -48,4 +48,6 @@ public interface GuideRepository extends JpaRepository<Guide, Long> {
       "JOIN w.orders o " +
       "WHERE o.id IN :orderIds AND a.deletedAt IS NULL AND w.deletedAt IS NULL")
   List<Object[]> findGuideNamesByOrderIds(@Param("orderIds") List<Long> orderIds);
+
+  java.util.Optional<Guide> findFirstByEmail(String email);
 }

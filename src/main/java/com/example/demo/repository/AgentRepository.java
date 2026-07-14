@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface AgentRepository extends JpaRepository<Agent, Long> {
     List<Agent> findByResellerId(Long resellerId);
+    java.util.Optional<Agent> findFirstByEmail(String email);
 }
