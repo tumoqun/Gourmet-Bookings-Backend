@@ -36,23 +36,4 @@ public class AssignmentController {
         workService.updateAssignment(request));
   }
 
-  @PutMapping("/{id}/extra-hours")
-  @PreAuthorize("hasAuthority('ASSIGNMENTS_ASSIGN')")
-  public ResponseEntity<AssignmentResponse> updateExtraHours(
-      @PathVariable Long id,
-      @RequestBody UpdateAssignmentExtraHoursRequest request) {
-
-    return ResponseEntity.ok(
-        workService.updateAssignmentExtraHours(id, request));
-  }
-
-  @PutMapping("/{id}/hourly-salary")
-  @PreAuthorize("hasAuthority('ASSIGNMENTS_ASSIGN')")
-  public ResponseEntity<AssignmentResponse> updateHourlySalary(
-      @PathVariable Long id,
-      @RequestBody UpdateAssignmentHourlySalaryRequest request) {
-
-    return ResponseEntity.ok(
-        workService.updateAssignmentHourlySalary(id, request));
-  }
 }

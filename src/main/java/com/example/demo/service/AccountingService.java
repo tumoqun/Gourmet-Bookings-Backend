@@ -5,7 +5,12 @@ import com.example.demo.dto.AccountingGuideProjection;
 import com.example.demo.dto.AccountingItemResponse;
 import com.example.demo.dto.AccountingPageResponse;
 import com.example.demo.dto.AccountingRowProjection;
+import com.example.demo.dto.AssignmentResponse;
+import com.example.demo.dto.UpdateAssignmentExtraHoursRequest;
+import com.example.demo.dto.UpdateAssignmentHourlySalaryRequest;
+import com.example.demo.entity.Assignment;
 import com.example.demo.repository.AccountingRepository;
+import com.example.demo.repository.AssignmentRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -32,6 +38,7 @@ import java.util.stream.Collectors;
 public class AccountingService {
 
   private final AccountingRepository accountingRepository;
+  private final AssignmentRepository assignmentRepository;
 
   public AccountingPageResponse findAll(AccountingFilter filter, Pageable pageable) {
 
@@ -124,6 +131,56 @@ public class AccountingService {
         .totalPages(totalPages)
         .page(pageable.getPageNumber())
         .size(pageSize)
+        .build();
+  }
+
+  @Transactional
+  public AssignmentResponse updateAssignmentExtraHours(
+      Long workId, Long guideId, UpdateAssignmentExtraHoursRequest request) {
+
+    Assignment assignment = assignmentRepository
+        .findByWorkIdAndGuideIdAndDeletedAtIsNull(workId, guideId)
+        .orElseThrow(() -> new RuntimeException(
+            "Assignment not found for workId=" + workId + ", guideId=" + guideId));
+
+    assignment.setExtraHoursMinutes(request.getExtraHoursMinutes());
+    assignment.setUpdatedAt(LocalDateTime.now());
+
+    Assignment saved = assignmentRepository.save(assignment);
+
+    return AssignmentResponse.builder()
+        .id(saved.getId())
+        .workId(saved.getWorkId())
+        .guideId(saved.getGuideId())
+        .status(saved.getStatus())
+        .role(saved.getRole())
+        .note(saved.getNote())
+        .isCalendarInvitation(saved.getIsCalendarInvitation())
+        .build();
+  }
+
+  @Transactional
+  public AssignmentResponse updateAssignmentHourlySalary(
+      Long workId, Long guideId, UpdateAssignmentHourlySalaryRequest request) {
+
+    Assignment assignment = assignmentRepository
+        .findByWorkIdAndGuideIdAndDeletedAtIsNull(workId, guideId)
+        .orElseThrow(() -> new RuntimeException(
+            "Assignment not found for workId=" + workId + ", guideId=" + guideId));
+
+    assignment.setHourlySalaryOverride(request.getHourlySalaryOverride());
+    assignment.setUpdatedAt(LocalDateTime.now());
+
+    Assignment saved = assignmentRepository.save(assignment);
+
+    return AssignmentResponse.builder()
+        .id(saved.getId())
+        .workId(saved.getWorkId())
+        .guideId(saved.getGuideId())
+        .status(saved.getStatus())
+        .role(saved.getRole())
+        .note(saved.getNote())
+        .isCalendarInvitation(saved.getIsCalendarInvitation())
         .build();
   }
 

@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 import com.example.demo.dto.AssignmentRequest;
 import com.example.demo.dto.AssignmentResponse;
 import com.example.demo.dto.AssignmentUpdateRequest;
-import com.example.demo.dto.UpdateAssignmentExtraHoursRequest;
-import com.example.demo.dto.UpdateAssignmentHourlySalaryRequest;
 import com.example.demo.dto.GuestProjection;
 import com.example.demo.dto.GuestResponse;
 import com.example.demo.dto.GuideResponse;
@@ -321,54 +319,6 @@ public class WorkService {
   public List<WorkGuideDetailProjection> getWorkGuidesByWorkId(Long workId) {
     List<WorkGuideDetailProjection> guides = workRepository.findGuidesByWorkId(workId);
     return guides;
-  }
-
-  public AssignmentResponse updateAssignmentExtraHours(
-      Long assignmentId, UpdateAssignmentExtraHoursRequest request) {
-
-    Assignment assignment = assignmentRepository
-        .findById(assignmentId)
-        .orElseThrow(() -> new RuntimeException(
-            "Assignment not found: " + assignmentId));
-
-    assignment.setExtraHoursMinutes(request.getExtraHoursMinutes());
-    assignment.setUpdatedAt(LocalDateTime.now());
-
-    Assignment saved = assignmentRepository.save(assignment);
-
-    return AssignmentResponse.builder()
-        .id(saved.getId())
-        .workId(saved.getWorkId())
-        .guideId(saved.getGuideId())
-        .status(saved.getStatus())
-        .role(saved.getRole())
-        .note(saved.getNote())
-        .isCalendarInvitation(saved.getIsCalendarInvitation())
-        .build();
-  }
-
-  public AssignmentResponse updateAssignmentHourlySalary(
-      Long assignmentId, UpdateAssignmentHourlySalaryRequest request) {
-
-    Assignment assignment = assignmentRepository
-        .findById(assignmentId)
-        .orElseThrow(() -> new RuntimeException(
-            "Assignment not found: " + assignmentId));
-
-    assignment.setHourlySalaryOverride(request.getHourlySalaryOverride());
-    assignment.setUpdatedAt(LocalDateTime.now());
-
-    Assignment saved = assignmentRepository.save(assignment);
-
-    return AssignmentResponse.builder()
-        .id(saved.getId())
-        .workId(saved.getWorkId())
-        .guideId(saved.getGuideId())
-        .status(saved.getStatus())
-        .role(saved.getRole())
-        .note(saved.getNote())
-        .isCalendarInvitation(saved.getIsCalendarInvitation())
-        .build();
   }
 
   public AssignmentResponse createAssignment(
