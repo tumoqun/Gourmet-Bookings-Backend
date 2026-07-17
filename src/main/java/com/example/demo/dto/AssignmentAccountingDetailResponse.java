@@ -14,10 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssignmentAccountingDetailResponse {
-    private String guideAvatar;
-    private String guideFullName;
-
-    private List<GuideBasicInfo> otherGuides;
+    /** All guides assigned to this work. */
+    private List<GuideBasicInfo> guides;
 
     private String serviceName;
     private Integer durationMinutes;

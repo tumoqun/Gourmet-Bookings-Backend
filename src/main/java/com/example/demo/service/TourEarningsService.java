@@ -3,13 +3,10 @@ package com.example.demo.service;
 import com.example.demo.dto.AssignmentAccountingDetailResponse;
 import com.example.demo.dto.TourEarningsResponse;
 import com.example.demo.entity.Assignment;
-import com.example.demo.entity.Guide;
 import com.example.demo.entity.SalaryScale;
 import com.example.demo.dto.WorkDetailForGuideProjection;
-import com.example.demo.entity.Work;
 import com.example.demo.repository.AssignmentRepository;
 import com.example.demo.repository.ExpenseRepository;
-import com.example.demo.repository.GuideRepository;
 import com.example.demo.repository.ReceiptRepository;
 import com.example.demo.repository.SalaryScaleRepository;
 import com.example.demo.repository.UserRepository;
@@ -17,7 +14,6 @@ import com.example.demo.repository.WorkRepository;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.GuideBasicInfo;
-import com.example.demo.dto.WorkGuideDetailProjection;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -44,22 +40,19 @@ public class TourEarningsService {
     private final SalaryScaleRepository salaryScaleRepository;
     private final ExpenseRepository expenseRepository;
     private final ReceiptRepository receiptRepository;
-    private final GuideRepository guideRepository;
 
     public TourEarningsService(AssignmentRepository assignmentRepository,
                                WorkRepository workRepository,
                                UserRepository userRepository,
                                SalaryScaleRepository salaryScaleRepository,
                                ExpenseRepository expenseRepository,
-                               ReceiptRepository receiptRepository,
-                               GuideRepository guideRepository) {
+                               ReceiptRepository receiptRepository) {
         this.assignmentRepository = assignmentRepository;
         this.workRepository = workRepository;
         this.userRepository = userRepository;
         this.salaryScaleRepository = salaryScaleRepository;
         this.expenseRepository = expenseRepository;
         this.receiptRepository = receiptRepository;
-        this.guideRepository = guideRepository;
     }
 
     public Optional<TourEarningsResponse> compute(Long workId, Long guideId) {
@@ -129,12 +122,7 @@ public class TourEarningsService {
         if (workOpt.isEmpty()) return Optional.empty();
         WorkDetailForGuideProjection work = workOpt.get();
 
-        Optional<Guide> guideOpt = guideRepository.findById(guideId);
-        String guideAvatar = guideOpt.map(Guide::getAvatar).orElse(null);
-        String guideFullName = guideOpt.map(Guide::getFullName).orElse(null);
-
-        List<GuideBasicInfo> otherGuides = workRepository.findGuidesByWorkId(workId).stream()
-            .filter(wg -> !guideId.equals(wg.getGuideId()))
+        List<GuideBasicInfo> guides = workRepository.findGuidesByWorkId(workId).stream()
             .map(wg -> GuideBasicInfo.builder()
                 .avatar(wg.getAvatar())
                 .fullName(wg.getName())
@@ -177,9 +165,7 @@ public class TourEarningsService {
         if (tourReceipts == null) tourReceipts = BigDecimal.ZERO;
 
         return Optional.of(AssignmentAccountingDetailResponse.builder()
-            .guideAvatar(guideAvatar)
-            .guideFullName(guideFullName)
-            .otherGuides(otherGuides)
+            .guides(guides)
             .serviceName(work.getServiceName())
             .durationMinutes(work.getServiceDurationMinutes())
             .tourType(tourType)
