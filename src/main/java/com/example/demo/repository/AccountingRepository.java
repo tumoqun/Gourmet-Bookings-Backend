@@ -41,7 +41,7 @@ public interface AccountingRepository extends JpaRepository<Work, Long> {
         AND (:ref          IS NULL OR LOWER(o.ref1) LIKE LOWER(CONCAT('%', :ref, '%')))
         AND (:guideName    IS NULL OR LOWER(g.full_name) LIKE LOWER(CONCAT('%', :guideName, '%')))
         AND (:serviceName  IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :serviceName, '%')))
-        AND (:tourDate     IS NULL OR w.tour_date = :tourDate)
+        AND (CAST(:tourDate AS DATE) IS NULL OR w.tour_date = CAST(:tourDate AS DATE))
         AND (:status       IS NULL OR UPPER(w.status) = UPPER(:status))
         AND (:isPrivate    IS NULL OR o.is_private = :isPrivate)
       """, nativeQuery = true)
@@ -73,7 +73,7 @@ public interface AccountingRepository extends JpaRepository<Work, Long> {
         AND (:ref          IS NULL OR LOWER(o.ref1) LIKE LOWER(CONCAT('%', :ref, '%')))
         AND (:guideName    IS NULL OR LOWER(g.full_name) LIKE LOWER(CONCAT('%', :guideName, '%')))
         AND (:serviceName  IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :serviceName, '%')))
-        AND (:tourDate     IS NULL OR w.tour_date = :tourDate)
+        AND (CAST(:tourDate AS DATE) IS NULL OR w.tour_date = CAST(:tourDate AS DATE))
         AND (:status       IS NULL OR UPPER(w.status) = UPPER(:status))
         AND (:isPrivate    IS NULL OR o.is_private = :isPrivate)
       ORDER BY w.id DESC
