@@ -2,7 +2,12 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AccountingFilter;
 import com.example.demo.dto.AccountingPageResponse;
+import com.example.demo.dto.AssignmentAccountingDetailResponse;
+import com.example.demo.dto.AssignmentResponse;
+import com.example.demo.dto.UpdateAssignmentExtraHoursRequest;
+import com.example.demo.dto.UpdateAssignmentHourlySalaryRequest;
 import com.example.demo.service.AccountingService;
+import com.example.demo.service.TourEarningsService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -26,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountingController {
 
   private final AccountingService accountingService;
+  private final TourEarningsService tourEarningsService;
 
   /**
    * Returns a paginated list of work rows for the Accounting table.
@@ -50,5 +59,43 @@ public class AccountingController {
       Pageable pageable) {
 
     return ResponseEntity.ok(accountingService.findAll(filter, pageable));
+  }
+
+  /**
+   * Returns accounting detail for one guide's assignment on one work: guide info, status,
+   * start/end times, standard/extra/total hours, hourly salary, taxable salary, travel expenses,
+   * and tour receipts.
+   */
+  @GetMapping("/detail")
+  @PreAuthorize("hasAnyAuthority('ACCOUNTING_READ','GUIDE_TOURS_READ')")
+  public ResponseEntity<AssignmentAccountingDetailResponse> getAccountingDetail(
+      @RequestParam Long workId,
+      @RequestParam Long guideId) {
+
+    return tourEarningsService.computeAccountingDetail(workId, guideId)
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  @PutMapping("/extra-hours")
+  @PreAuthorize("hasAuthority('ACCOUNTING_READ')")
+  public ResponseEntity<AssignmentResponse> updateExtraHours(
+      @RequestParam Long workId,
+      @RequestParam Long guideId,
+      @RequestBody UpdateAssignmentExtraHoursRequest request) {
+
+    return ResponseEntity.ok(
+        accountingService.updateAssignmentExtraHours(workId, guideId, request));
+  }
+
+  @PutMapping("/hourly-salary")
+  @PreAuthorize("hasAuthority('ACCOUNTING_READ')")
+  public ResponseEntity<AssignmentResponse> updateHourlySalary(
+      @RequestParam Long workId,
+      @RequestParam Long guideId,
+      @RequestBody UpdateAssignmentHourlySalaryRequest request) {
+
+    return ResponseEntity.ok(
+        accountingService.updateAssignmentHourlySalary(workId, guideId, request));
   }
 }
